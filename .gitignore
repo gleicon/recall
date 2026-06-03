@@ -1,2 +1,4 @@
 technocore
 *.db
+# Added by goreleaser init:
+dist/
