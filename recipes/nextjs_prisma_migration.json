@@ -1,0 +1,11 @@
+{
+  "name": "add_prisma_migration_nextjs",
+  "framework": "nextjs",
+  "language": "typescript",
+  "signals": ["prisma/schema.prisma", "prisma/migrations"],
+  "context_needed": ["prisma schema", "migration history", "env database URL"],
+  "avoid": ["do not reset production data"],
+  "brief_template": "To add a Prisma migration:\n1. Update prisma/schema.prisma with new models/fields\n2. Run 'npx prisma migrate dev --name <name>'\n3. Review generated migration SQL in prisma/migrations/\n4. Update seed scripts if needed\n5. Regenerate Prisma client: 'npx prisma generate'",
+  "source": "pipecamp-defaults",
+  "tags": ["database", "prisma", "nextjs", "migration"]
+}

@@ -1,0 +1,11 @@
+{
+  "name": "add_postgresql_indexing",
+  "framework": "",
+  "language": "",
+  "signals": ["prisma/schema.prisma", "migrations/", "db/"],
+  "context_needed": ["slow query log", "EXPLAIN ANALYZE", "index types"],
+  "avoid": ["do not add indexes on low-cardinality columns"],
+  "brief_template": "To add PostgreSQL indexing:\n1. Identify slow queries from logs or pg_stat_statements\n2. Run EXPLAIN ANALYZE on target queries\n3. Add B-tree index for equality/range: CREATE INDEX idx ON table(column)\n4. Add GIN index for JSONB/array/fts\n5. Add partial index WHERE clause for filtered queries\n6. Re-run EXPLAIN to verify improvement\n7. Monitor index bloat with pgstattuple",
+  "source": "pipecamp-defaults",
+  "tags": ["postgresql", "database", "performance", "indexing"]
+}

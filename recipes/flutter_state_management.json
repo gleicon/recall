@@ -1,0 +1,11 @@
+{
+  "name": "add_flutter_state_management",
+  "framework": "flutter",
+  "language": "dart",
+  "signals": ["pubspec.yaml", "lib/main.dart", "lib/bloc/", "lib/provider/"],
+  "context_needed": ["state library", "models", "UI widgets", "dependency injection"],
+  "avoid": ["do not mix multiple state libraries"],
+  "brief_template": "To add state management in Flutter:\n1. Choose library: Provider, Riverpod, Bloc, or GetX\n2. Add dependency to pubspec.yaml\n3. Create models in lib/models/\n4. Create state class (ChangeNotifier, Bloc, or StateNotifier)\n5. Wrap app with provider/bloc at main.dart\n6. Consume state in widgets with context.watch / BlocBuilder",
+  "source": "pipecamp-defaults",
+  "tags": ["flutter", "dart", "state-management", "mobile"]
+}

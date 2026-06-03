@@ -1,0 +1,11 @@
+{
+  "name": "add_django_crud",
+  "framework": "django",
+  "language": "python",
+  "signals": ["manage.py", "models.py", "views.py"],
+  "context_needed": ["models", "serializers", "urls", "admin"],
+  "avoid": ["do not bypass Django ORM with raw SQL"],
+  "brief_template": "To add a CRUD feature in Django:\n1. Add model to models.py with fields and Meta options\n2. Register model in admin.py if admin UI needed\n3. Create serializer in serializers.py (DRF) or use forms\n4. Add view: class-based (ListView, DetailView) or DRF ViewSet\n5. Wire URL in urls.py\n6. Add tests in tests.py using Django TestCase or pytest-django",
+  "source": "pipecamp-defaults",
+  "tags": ["django", "python", "crud", "api"]
+}

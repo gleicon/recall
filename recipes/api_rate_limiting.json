@@ -1,0 +1,11 @@
+{
+  "name": "add_api_rate_limiting",
+  "framework": "",
+  "language": "",
+  "signals": ["middleware.ts", "src/middleware/", "api/"],
+  "context_needed": ["middleware stack", "redis/store", "headers"],
+  "avoid": ["do not rate-limit health checks"],
+  "brief_template": "To add API rate limiting:\n1. Choose strategy: token bucket, sliding window, or fixed window\n2. Use library: express-rate-limit, @upstash/ratelimit, or custom middleware\n3. Store counters in Redis for distributed apps\n4. Return 429 with Retry-After header\n5. Skip rate limiting for health checks and internal IPs\n6. Add different tiers: anonymous vs authenticated users",
+  "source": "pipecamp-defaults",
+  "tags": ["api", "security", "rate-limiting", "middleware"]
+}

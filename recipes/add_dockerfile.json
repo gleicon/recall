@@ -1,0 +1,11 @@
+{
+  "name": "add_dockerfile",
+  "framework": "",
+  "language": "",
+  "signals": ["Dockerfile", "docker-compose.yml"],
+  "context_needed": ["base image", "build command", "port", "entrypoint"],
+  "avoid": ["do not run as root"],
+  "brief_template": "To add a Dockerfile:\n1. Choose minimal base image (distroless, alpine, or language-specific)\n2. Multi-stage build: deps → build → runtime\n3. Copy only necessary files; use .dockerignore\n4. Expose correct port and set HEALTHCHECK\n5. Run as non-root user (USER 1000)\n6. Add docker-compose.yml for local development if needed",
+  "source": "pipecamp-defaults",
+  "tags": ["docker", "devops", "container"]
+}

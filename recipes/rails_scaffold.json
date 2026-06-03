@@ -1,0 +1,11 @@
+{
+  "name": "add_rails_scaffold",
+  "framework": "rails",
+  "language": "ruby",
+  "signals": ["Gemfile", "app/models", "app/controllers", "config/routes.rb"],
+  "context_needed": ["model", "controller", "views", "routes", "migrations"],
+  "avoid": ["do not generate views if API-only"],
+  "brief_template": "To add a resource in Rails:\n1. Generate scaffold: 'rails g scaffold Post title:string body:text'\n2. Review migration and run 'rails db:migrate'\n3. Check routes in config/routes.rb (resources :posts)\n4. Customize controller strong params in app/controllers/posts_controller.rb\n5. Add model validations in app/models/post.rb\n6. Write tests: 'rails g integration_test posts' or RSpec",
+  "source": "pipecamp-defaults",
+  "tags": ["rails", "ruby", "scaffold", "mvc"]
+}

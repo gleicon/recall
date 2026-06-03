@@ -1,0 +1,11 @@
+{
+  "name": "add_github_actions_ci",
+  "framework": "",
+  "language": "",
+  "signals": [".github/workflows/"],
+  "context_needed": ["language runtime", "test command", "build command"],
+  "avoid": ["do not commit secrets to YAML"],
+  "brief_template": "To add GitHub Actions CI:\n1. Create .github/workflows/ci.yml\n2. Trigger on push and pull_request to main\n3. Set up language runtime (go, node, python, rust)\n4. Add steps: checkout, deps install, lint, test, build\n5. Use secrets.GITHUB_TOKEN or repository secrets for auth\n6. Consider adding matrix builds for multiple versions/OS",
+  "source": "pipecamp-defaults",
+  "tags": ["ci", "github-actions", "devops"]
+}
