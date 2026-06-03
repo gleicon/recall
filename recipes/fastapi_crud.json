@@ -6,6 +6,6 @@
   "context_needed": ["pydantic models", "database session", "router file", "dependency injection"],
   "avoid": ["do not mix sync and async DB calls"],
   "brief_template": "To add a CRUD endpoint in FastAPI:\n1. Define Pydantic models in models.py or schemas.py\n2. Add SQLAlchemy model in models/ if using ORM\n3. Create router in routers/ with GET/POST/PUT/DELETE\n4. Use Depends() for DB session injection\n5. Add tests with TestClient",
-  "source": "pipecamp-defaults",
+  "source": "technocore-defaults",
   "tags": ["crud", "fastapi", "python", "api"]
 }

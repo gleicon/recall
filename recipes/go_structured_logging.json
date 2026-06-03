@@ -6,6 +6,6 @@
   "context_needed": ["logger interface", "middleware setup", "config"],
   "avoid": ["do not use global logger unless project already does"],
   "brief_template": "To add structured logging to a Go service:\n1. Choose library: slog (stdlib), zap, or zerolog\n2. Create internal/logger/ package with a constructor\n3. Inject logger into handlers/services via dependency injection\n4. Add request ID to context and log it in middleware\n5. Use JSON output in production, text in development",
-  "source": "pipecamp-defaults",
+  "source": "technocore-defaults",
   "tags": ["logging", "go", "observability"]
 }

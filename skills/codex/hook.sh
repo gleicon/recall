@@ -41,7 +41,7 @@ content = sys.stdin.read()
 output = {
   'hookSpecificOutput': {
     'hookEventName': 'UserPromptSubmit',
-    'additionalContext': '[Pipecamp Brief]\\n' + content
+    'additionalContext': '[Technocore Brief]\\n' + content
   }
 }
 print(json.dumps(output))

@@ -6,6 +6,6 @@
   "context_needed": ["middleware.ts", "matcher config", "route groups"],
   "avoid": ["do not block static assets"],
   "brief_template": "To add middleware in Next.js App Router:\n1. Check existing src/middleware.ts\n2. Define matcher in middleware.config or export const config\n3. Handle redirects, rewrites, or auth checks\n4. Exclude public files and API routes unless needed\n5. Test middleware behavior with 'next dev'",
-  "source": "pipecamp-defaults",
+  "source": "technocore-defaults",
   "tags": ["middleware", "nextjs", "routing"]
 }

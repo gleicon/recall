@@ -1,4 +1,4 @@
-# Pipecamp
+# Technocore
 
 Accelerate tasks with cached project context and record outcomes for continuous improvement.
 

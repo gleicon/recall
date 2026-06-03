@@ -1,73 +1,148 @@
-## Technocore
+# Technocore
 
-![](pipecamp.jpg)
+A local context engine for AI-assisted development. Technocore maintains persistent, searchable knowledge about your projects and coding patterns, reducing redundant context building and token consumption across AI assistant sessions.
 
-Technocore is a local and global context storage system for AI-assisted development.
+## What It Does
 
-- **Local cache** = "what is true in this repo?"
-- **Global cache** = "what patterns keep being true across repos?"
+Technocore operates as a **context layer** between your codebase and AI assistants:
 
-It caches project abstractions, indexes files, provides RAG + vector search,
-and generates task briefs to save tokens and avoid unnecessary model roundtrips.
+- **Indexes** project structure, file summaries, and semantic content into local SQLite databases
+- **Matches** user prompts against reusable task recipes and historical solutions
+- **Routes** simple queries to local LLMs (llama.app, llama.cpp, Ollama) and complex ones to cloud assistants
+- **Learns** from interactions: tracks what local models handle well, extracts reusable code snippets, records agent behavior
 
-### Commands
+Nothing leaves your machine unless you delegate to a cloud model.
 
-#### Project & Cache
-- `technocore map` — detect and store the project map
-- `technocore cache build` — index the project and build the abstraction cache
-- `technocore cache inspect` — inspect cached files, subsystems, and memories
-- `technocore cache refresh` — update only changed files
-- `technocore cache invalidate` — remove stale entries
+## Installation
 
-#### Briefs & Recipes
-- `technocore recipes seed` — load default recipes into global.db
-- `technocore recipes add --from-file <path>` — add a custom recipe JSON
-- `technocore recipes list` — list all recipes
-- `technocore brief "add OAuth login"` — generate a task brief from global recipes + local facts
-
-#### Search & Summarize
-- `technocore index ./docs` — index an arbitrary directory
-- `technocore search <terms>` — search indexed content (FTS5 + vector re-ranking)
-- `technocore search -c <terms>` — chunk-level semantic search
-- `cat file.txt | technocore tldr` — summarize text without LLM calls
-
-#### Learning & Stats
-- `technocore learn "important insight"` — store an insight into local memory
-- `technocore run suggest --task "..." --files-changed "a,b"` — gated run recording
-- `technocore run record --task "..." --files-changed "a,b"` — manual run recording
-- `technocore stats cache` — show cache statistics
-- `technocore stats recipes` — show recipe usage statistics
-- `technocore stats runs` — show run statistics
-- `technocore cleanup` — remove old entries
-
-#### Skills
-- `technocore install-skill --target claude` — install Claude Code skill
-- `technocore install-skill --target opencode` — install opencode skill
-
-### Design
-
-Two SQLite databases:
-- `~/.technocore/global.db` — reusable patterns, task recipes, framework fingerprints, model behavior stats
-- `~/.technocore/projects/<hash>/project.db` — file summaries, chunks, embeddings, subsystem summaries, runs, memories
-
-Vector embeddings are computed with lightweight feature hashing (256 dims) for pure-Go, offline semantic similarity.
-
-Summarization is powered by [tldt](https://github.com/gleicon/tldt) — no API keys, no token costs.
-
-Recipes are stored as JSON files in `~/.technocore/recipes/` and loaded into `global.db` with embeddings for vector search.
-
-### Recipe JSON Format
-
-```json
-{
-  "name": "add_oauth_nextjs",
-  "framework": "nextjs",
-  "language": "typescript",
-  "signals": ["app/", "middleware.ts", "prisma/schema.prisma"],
-  "context_needed": ["auth module", "middleware", "user schema"],
-  "avoid": ["do not send all pages"],
-  "brief_template": "To add OAuth to this Next.js App Router project:\n1. Check src/lib/auth.ts...",
-  "source": "pipecamp-defaults",
-  "tags": ["auth", "oauth", "nextjs"]
-}
+```bash
+# macOS / Linux
+curl -LsSf https://llama.app/install.sh | sh  # optional: for local LLM support
+go install github.com/gleicon/technocore@latest
 ```
+
+Technocore is a single static binary. No runtime dependencies, no CGO, no API keys required.
+
+## Quick Start
+
+```bash
+# 1. Map your project
+cd my-project
+technocore map
+
+# 2. Load default recipes (framework patterns, common tasks)
+technocore recipes seed
+
+# 3. Generate a context-rich brief for an AI assistant
+technocore brief "add OAuth login"
+
+# 4. Query with smart routing (local model if available, else enriched brief)
+technocore query "how do I structure middleware in this project"
+```
+
+## Core Commands
+
+### Project Context
+
+| Command | Purpose |
+|---|---|
+| `technocore map` | Detect and cache project type, entry points, module boundaries |
+| `technocore cache build` | Index all source files with summaries and embeddings |
+| `technocore cache inspect` | View cached files, subsystems, and memories |
+| `technocore cache refresh` | Incrementally update only changed files |
+| `technocore learn "insight"` | Store a manual insight into project memory |
+
+### Knowledge Retrieval
+
+| Command | Purpose |
+|---|---|
+| `technocore brief "task"` | Generate enriched prompt context from recipes + project state |
+| `technocore query "question"` | Smart router: local LLM answer or delegation brief |
+| `technocore search "terms"` | FTS5 + vector search over indexed content |
+| `technocore search -c "terms"` | Chunk-level semantic search |
+
+### Global Brain
+
+| Command | Purpose |
+|---|---|
+| `technocore brain conversations` | History of local model interactions |
+| `technocore brain snippets` | Reusable code blocks extracted from responses |
+| `technocore brain lessons` | What works per framework / model |
+| `technocore brain stats` | Aggregate metrics: success rate, tokens saved |
+| `technocore brain search "auth"` | Search all brain data |
+| `technocore brain frameworks` | Per-framework performance breakdown |
+
+### Recipes
+
+| Command | Purpose |
+|---|---|
+| `technocore recipes seed` | Load 30+ default recipes (Go, Next.js, Python, Rust, etc.) |
+| `technocore recipes list` | Show all loaded recipes with usage counts |
+| `technocore recipes add -f my-recipe.json` | Add a custom recipe |
+
+### Local LLM Management
+
+| Command | Purpose |
+|---|---|
+| `technocore local status` | Detect running local LLM server |
+| `technocore local models` | List available models |
+| `technocore local use <model>` | Lock to a specific model |
+
+### Recording & Stats
+
+| Command | Purpose |
+|---|---|
+| `technocore run suggest --task "..."` | Gated recording of an assistant run |
+| `technocore run record --task "..."` | Manual recording without prompt |
+| `technocore stats cache` | Project cache statistics |
+| `technocore stats recipes` | Recipe usage statistics |
+| `technocore stats runs` | Aggregated run statistics |
+| `technocore stats global` | Cross-project global statistics |
+| `technocore stats insights` | Most/least useful recipes |
+
+### Maintenance
+
+| Command | Purpose |
+|---|---|
+| `technocore bench` | Run performance benchmarks |
+| `technocore cleanup` | Remove old cache entries |
+| `technocore cleanup project <dir>` | Remove a project's data directory |
+
+## Data Storage
+
+Technocore uses two SQLite databases:
+
+**Global** (`~/.technocore/global.db`):
+- Task recipes with vector embeddings
+- Framework fingerprints
+- Conversation history with local models
+- Extracted code snippets
+- Agent lessons (what works per framework/model)
+
+**Per-project** (`~/.technocore/projects/<hash>/project.db`):
+- File summaries and content
+- Semantic chunks with embeddings
+- Subsystem abstractions
+- User insights and memories
+- Run history and outcomes
+
+All data is local. No cloud sync, no telemetry.
+
+## Documentation
+
+- [Usage Reference](docs/usage.md) — Complete command reference with examples
+- [Integration Guide](docs/integration.md) — Hook into Claude, Pi, opencode, Cursor, Codex
+- [Scripting & Automation](docs/scripting.md) — Shell integration, pre-commit hooks, CI
+- [Manual Data Management](docs/manual-data.md) — Adding recipes, insights, snippets by hand
+- [Backup & Migration](docs/backup.md) — Export, import, and archive strategies
+- [Architecture](docs/architecture.md) — How the embedding, search, and routing systems work
+
+## Requirements
+
+- Go 1.22+ (for building from source)
+- macOS or Linux
+- Optional: Any OpenAI-compatible local LLM server on localhost:8080
+
+## License
+
+MIT

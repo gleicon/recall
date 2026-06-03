@@ -3,7 +3,6 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"os"
 
 	_ "modernc.org/sqlite"
 )
@@ -83,6 +82,42 @@ func InitGlobalSchema(db *sql.DB) error {
 			behavior_note TEXT,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
+		`CREATE TABLE IF NOT EXISTS conversations (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			task TEXT,
+			prompt TEXT,
+			response TEXT,
+			model_name TEXT,
+			input_tokens INTEGER,
+			output_tokens INTEGER,
+			delegated INTEGER DEFAULT 0,
+			delegation_reason TEXT,
+			project_hash TEXT,
+			framework TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS snippets (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			name TEXT,
+			language TEXT,
+			framework TEXT,
+			code TEXT,
+			context TEXT,
+			embedding BLOB,
+			use_count INTEGER DEFAULT 0,
+			source TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
+		`CREATE TABLE IF NOT EXISTS agent_lessons (
+			id INTEGER PRIMARY KEY AUTOINCREMENT,
+			pattern TEXT,
+			framework TEXT,
+			model_name TEXT,
+			success_rate REAL DEFAULT 0,
+			context TEXT,
+			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+		)`,
 	}
 	for _, s := range stmts {
 		if _, err := db.Exec(s); err != nil {
@@ -96,6 +131,7 @@ func InitGlobalSchema(db *sql.DB) error {
 		`ALTER TABLE task_recipes ADD COLUMN avg_score REAL DEFAULT 0`,
 		`ALTER TABLE task_recipes ADD COLUMN source TEXT`,
 		`ALTER TABLE task_recipes ADD COLUMN tags TEXT`,
+		`ALTER TABLE conversations ADD COLUMN delegation_reason TEXT`,
 	}
 	for _, s := range alterStmts {
 		_, _ = db.Exec(s) // ignore "duplicate column name" errors
@@ -185,11 +221,4 @@ func InitProjectSchema(db *sql.DB) error {
 	return nil
 }
 
-// FileExists checks if a path exists and is a file.
-func FileExists(path string) bool {
-	info, err := os.Stat(path)
-	if err != nil {
-		return false
-	}
-	return !info.IsDir()
-}
+

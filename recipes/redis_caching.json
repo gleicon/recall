@@ -6,6 +6,6 @@
   "context_needed": ["redis client", "cache key strategy", "ttl", "serialization"],
   "avoid": ["do not cache user-specific data without scoping keys"],
   "brief_template": "To add Redis caching:\n1. Add Redis client lib (redis-py, ioredis, go-redis, etc.)\n2. Create cache abstraction/wrapper in project language\n3. Define cache key naming convention: '<service>:<entity>:<id>'\n4. Set TTL based on data volatility (e.g., 300s for hot data)\n5. Handle cache misses gracefully (fallback to DB)\n6. Add cache invalidation on writes\n7. Monitor cache hit rate",
-  "source": "pipecamp-defaults",
+  "source": "technocore-defaults",
   "tags": ["redis", "cache", "performance", "infrastructure"]
 }

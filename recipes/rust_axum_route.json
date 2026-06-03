@@ -6,6 +6,6 @@
   "context_needed": ["router setup", "handler signature", "state/extractors"],
   "avoid": ["do not block the async runtime"],
   "brief_template": "To add an Axum route:\n1. Check src/routes/ or src/main.rs for existing Router::new() setup\n2. Add handler function: async fn handler(State(db): State<Db>) -> Result<Json<T>, AppError>\n3. Wire route in router with .route(\"/path\", get(handler))\n4. Add integration test using axum::test::TestClient or reqwest\n5. Update OpenAPI docs if using utoipa",
-  "source": "pipecamp-defaults",
+  "source": "technocore-defaults",
   "tags": ["axum", "rust", "api", "routing"]
 }

@@ -6,6 +6,6 @@
   "context_needed": ["http server setup", "router/mux", "config"],
   "avoid": ["do not expose sensitive env vars"],
   "brief_template": "To add a health check to a Go service:\n1. Add /healthz endpoint in your router (e.g., chi, gorilla, stdlib)\n2. Return HTTP 200 with JSON: {\"status\":\"ok\"}\n3. Optionally check database connectivity\n4. Add test in _test.go for the handler\n5. Update Dockerfile HEALTHCHECK if present",
-  "source": "pipecamp-defaults",
+  "source": "technocore-defaults",
   "tags": ["health", "go", "http", "monitoring"]
 }

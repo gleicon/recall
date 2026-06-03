@@ -6,6 +6,6 @@
   "context_needed": ["existing schemas", "BaseModel patterns", "validation rules"],
   "avoid": ["do not duplicate ORM models"],
   "brief_template": "To add Pydantic models in FastAPI:\n1. Check existing schemas.py or models.py for patterns\n2. Inherit from BaseModel or a project-specific base\n3. Add Field(...) descriptions and validation\n4. Separate Create/Update/Response models if needed\n5. Export models from __init__.py",
-  "source": "pipecamp-defaults",
+  "source": "technocore-defaults",
   "tags": ["pydantic", "fastapi", "python", "validation"]
 }

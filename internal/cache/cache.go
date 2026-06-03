@@ -414,7 +414,7 @@ func (m *Manager) StoreMemory(kind, content, context string) error {
 }
 
 // StoreRun records a model run for learning.
-func (m *Manager) StoreRun(taskType, framework string, filesIncluded, filesChanged []string, testsPassed, followUp, inputTokens, outputTokens, accepted int) error {
+func (m *Manager) StoreRun(taskType, framework, modelName string, filesIncluded, filesChanged []string, testsPassed, followUp, inputTokens, outputTokens, accepted int) error {
 	fi, _ := json.Marshal(filesIncluded)
 	fc, _ := json.Marshal(filesChanged)
 	_, err := m.ProjectDB.Exec(`INSERT INTO runs(task_type, framework, files_included, files_changed, tests_passed, follow_up_needed, input_tokens, output_tokens, accepted) VALUES (?,?,?,?,?,?,?,?,?)`, taskType, framework, fi, fc, testsPassed, followUp, inputTokens, outputTokens, accepted)
@@ -422,7 +422,7 @@ func (m *Manager) StoreRun(taskType, framework string, filesIncluded, filesChang
 		return err
 	}
 	// Update global stats
-	_, err = m.GlobalDB.Exec(`INSERT INTO model_behavior_stats(model_name, task_type, framework, files_included, files_changed, tests_passed, follow_up_needed, input_tokens, output_tokens, accepted) VALUES (?,?,?,?,?,?,?,?,?,?)`, "default", taskType, framework, fi, fc, testsPassed, followUp, inputTokens, outputTokens, accepted)
+	_, err = m.GlobalDB.Exec(`INSERT INTO model_behavior_stats(model_name, task_type, framework, files_included, files_changed, tests_passed, follow_up_needed, input_tokens, output_tokens, accepted) VALUES (?,?,?,?,?,?,?,?,?,?)`, modelName, taskType, framework, fi, fc, testsPassed, followUp, inputTokens, outputTokens, accepted)
 	return err
 }
 

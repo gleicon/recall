@@ -59,21 +59,7 @@ var statsRecipesCmd = &cobra.Command{
 		}
 		defer rows.Close()
 
-		fmt.Println("Recipe               | Uses | Avg Score | Framework")
-		fmt.Println(strings.Repeat("-", 55))
-		for rows.Next() {
-			var name, fw string
-			var useCount int
-			var avgScore sql.NullFloat64
-			if err := rows.Scan(&name, &useCount, &avgScore, &fw); err != nil {
-				continue
-			}
-			score := 0.0
-			if avgScore.Valid {
-				score = avgScore.Float64
-			}
-			fmt.Printf("%-20s | %4d | %9.2f | %s\n", name, useCount, score, fw)
-		}
+		printRecipeRows(rows)
 	},
 }
 
@@ -144,10 +130,66 @@ var statsGlobalCmd = &cobra.Command{
 	},
 }
 
+func printRecipeRows(rows *sql.Rows) {
+	fmt.Println("Recipe               | Uses | Avg Score | Framework")
+	fmt.Println(strings.Repeat("-", 55))
+	for rows.Next() {
+		var name, fw string
+		var useCount int
+		var avgScore sql.NullFloat64
+		if err := rows.Scan(&name, &useCount, &avgScore, &fw); err != nil {
+			continue
+		}
+		score := 0.0
+		if avgScore.Valid {
+			score = avgScore.Float64
+		}
+		fmt.Printf("%-20s | %4d | %9.2f | %s\n", name, useCount, score, fw)
+	}
+}
+
+var statsInsightsCmd = &cobra.Command{
+	Use:   "insights",
+	Short: "Show most and least useful recipes",
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg := config.NewConfig()
+		gdb, err := db.Open(cfg.GlobalDBPath)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		defer gdb.Close()
+		if err := db.InitGlobalSchema(gdb); err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+
+		fmt.Println("=== Most Useful Recipes (by use_count) ===")
+		rows, err := gdb.Query(`SELECT name, use_count, avg_score, framework FROM task_recipes WHERE use_count > 0 ORDER BY use_count DESC, avg_score DESC LIMIT 10`)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		defer rows.Close()
+		printRecipeRows(rows)
+
+		fmt.Println()
+		fmt.Println("=== Least Useful Recipes (by use_count) ===")
+		rows2, err := gdb.Query(`SELECT name, use_count, avg_score, framework FROM task_recipes ORDER BY use_count ASC, avg_score ASC LIMIT 10`)
+		if err != nil {
+			fmt.Println("Error:", err)
+			return
+		}
+		defer rows2.Close()
+		printRecipeRows(rows2)
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(statsCmd)
 	statsCmd.AddCommand(statsCacheCmd)
 	statsCmd.AddCommand(statsRecipesCmd)
 	statsCmd.AddCommand(statsRunsCmd)
 	statsCmd.AddCommand(statsGlobalCmd)
+	statsCmd.AddCommand(statsInsightsCmd)
 }

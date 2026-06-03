@@ -6,6 +6,6 @@
   "context_needed": ["schedule expression", "job function", "logging", "error handling"],
   "avoid": ["do not run overlapping job instances"],
   "brief_template": "To add a scheduled/cron job:\n1. Define schedule (cron expression or interval)\n2. Use scheduler: node-cron, APScheduler, Sidekiq, or Kubernetes CronJob\n3. Implement locking to prevent overlapping runs\n4. Log start/end with duration\n5. Handle errors: retry with exponential backoff or dead-letter queue\n6. Add monitoring alert if job fails N consecutive times\n7. Store last-run timestamp for visibility",
-  "source": "pipecamp-defaults",
+  "source": "technocore-defaults",
   "tags": ["cron", "scheduler", "background", "automation"]
 }

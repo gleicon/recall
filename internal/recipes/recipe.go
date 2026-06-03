@@ -216,6 +216,16 @@ func List(db *sql.DB) ([]*Recipe, error) {
 	return out, nil
 }
 
+func IncrementUseCount(db *sql.DB, name string, score float64) error {
+	_, err := db.Exec(`
+		UPDATE task_recipes
+		SET use_count = use_count + 1,
+		    avg_score = ((avg_score * use_count) + ?) / (use_count + 1)
+		WHERE name = ?
+	`, score, name)
+	return err
+}
+
 func join(ss []string) string {
 	return " " + fmt.Sprintf("%v", ss)
 }

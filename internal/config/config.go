@@ -3,6 +3,7 @@ package config
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -13,6 +14,12 @@ type Config struct {
 	HomeDir        string
 	GlobalDBPath   string
 	ProjectsDir    string
+	ConfigFilePath string
+}
+
+type Settings struct {
+	LocalModel   string `json:"local_model"`
+	QueryTimeout int    `json:"query_timeout"`
 }
 
 // NewConfig creates config from environment.
@@ -23,7 +30,34 @@ func NewConfig() *Config {
 		HomeDir:        base,
 		GlobalDBPath:   filepath.Join(base, "global.db"),
 		ProjectsDir:    filepath.Join(base, "projects"),
+		ConfigFilePath: filepath.Join(base, "config.json"),
 	}
+}
+
+func (c *Config) LoadSettings() (*Settings, error) {
+	data, err := os.ReadFile(c.ConfigFilePath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return &Settings{QueryTimeout: 30}, nil
+		}
+		return nil, err
+	}
+	var s Settings
+	if err := json.Unmarshal(data, &s); err != nil {
+		return nil, err
+	}
+	if s.QueryTimeout <= 0 {
+		s.QueryTimeout = 30
+	}
+	return &s, nil
+}
+
+func (c *Config) SaveSettings(s *Settings) error {
+	data, err := json.MarshalIndent(s, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(c.ConfigFilePath, data, 0644)
 }
 
 // EnsureDirs creates the base directories if they don't exist.
@@ -39,6 +73,7 @@ func (c *Config) EnsureDirs() error {
 // ProjectHash returns a stable hash for a project directory.
 func ProjectHash(dir string) string {
 	abs, _ := filepath.Abs(dir)
+	abs, _ = filepath.EvalSymlinks(abs)
 	h := sha256.Sum256([]byte(abs))
 	return hex.EncodeToString(h[:])[:16]
 }

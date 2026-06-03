@@ -59,9 +59,14 @@ var recipesSeedCmd = &cobra.Command{
 			return
 		}
 
+		strict, _ := cmd.Flags().GetBool("strict")
 		inserted := 0
 		for _, r := range list {
 			if err := recipes.Store(gdb, r); err != nil {
+				if strict {
+					fmt.Printf("Error: failed to store %s: %v\n", r.Name, err)
+					os.Exit(1)
+				}
 				fmt.Printf("Warning: failed to store %s: %v\n", r.Name, err)
 				continue
 			}
@@ -137,6 +142,7 @@ func init() {
 	recipesCmd.AddCommand(recipesAddCmd)
 	recipesCmd.AddCommand(recipesListCmd)
 	recipesAddCmd.Flags().StringP("from-file", "f", "", "Path to recipe JSON file")
+	recipesSeedCmd.Flags().Bool("strict", false, "Fail on first invalid recipe")
 }
 
 func copyDir(src, dst string) error {

@@ -159,3 +159,41 @@ func TestDuplicateStore(t *testing.T) {
 		t.Fatalf("expected 1 recipe, got %d", len(list))
 	}
 }
+
+func TestIncrementUseCount(t *testing.T) {
+	dbPath := filepath.Join(t.TempDir(), "test.db")
+	dbConn, err := db.Open(dbPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer dbConn.Close()
+	if err := db.InitGlobalSchema(dbConn); err != nil {
+		t.Fatal(err)
+	}
+
+	r := &Recipe{Name: "popular", BriefTemplate: "T", Source: "test"}
+	if err := Store(dbConn, r); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := IncrementUseCount(dbConn, "popular", 0.8); err != nil {
+		t.Fatal(err)
+	}
+	if err := IncrementUseCount(dbConn, "popular", 1.0); err != nil {
+		t.Fatal(err)
+	}
+
+	var useCount int
+	var avgScore float64
+	row := dbConn.QueryRow(`SELECT use_count, avg_score FROM task_recipes WHERE name = ?`, "popular")
+	if err := row.Scan(&useCount, &avgScore); err != nil {
+		t.Fatal(err)
+	}
+	if useCount != 2 {
+		t.Fatalf("expected use_count 2, got %d", useCount)
+	}
+	// Running average: (0.8 + 1.0) / 2 = 0.9
+	if avgScore < 0.89 || avgScore > 0.91 {
+		t.Fatalf("expected avg_score ~0.9, got %f", avgScore)
+	}
+}

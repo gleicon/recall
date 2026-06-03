@@ -6,6 +6,6 @@
   "context_needed": ["cursor vs offset", "page size", "sorting", "total count"],
   "avoid": ["do not use OFFSET for large datasets"],
   "brief_template": "To add API pagination:\n1. Choose strategy: cursor-based (best for large datasets) or offset/limit\n2. Add query params: ?cursor=xxx&limit=20 or ?page=1&per_page=20\n3. Return envelope: { data, next_cursor, has_more } or { data, page, total_pages }\n4. Add default limit (e.g., 20) and max limit (e.g., 100)\n5. Support sorting via ?sort=field:asc\n6. For cursor: base64-encode last-seen value (id or timestamp)\n7. Document pagination in API spec (OpenAPI/Postman)",
-  "source": "pipecamp-defaults",
+  "source": "technocore-defaults",
   "tags": ["api", "pagination", "performance", "backend"]
 }

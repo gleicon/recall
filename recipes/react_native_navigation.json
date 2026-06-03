@@ -6,6 +6,6 @@
   "context_needed": ["navigator setup", "screen components", "types"],
   "avoid": ["do not use react-navigation v5 patterns if on v6+"],
   "brief_template": "To add navigation in React Native:\n1. Install deps: '@react-navigation/native' + stack/native-stack\n2. Create src/navigation/AppNavigator.tsx with NavigationContainer\n3. Define screen types in src/navigation/types.ts\n4. Register screens in navigator component\n5. Wrap app entry point with NavigationContainer\n6. Handle deep linking config if needed",
-  "source": "pipecamp-defaults",
+  "source": "technocore-defaults",
   "tags": ["react-native", "mobile", "navigation", "typescript"]
 }

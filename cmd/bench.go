@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/gleicon/technocore/internal/cache"
 	"github.com/gleicon/technocore/internal/config"
 	"github.com/gleicon/technocore/internal/db"
 	"github.com/gleicon/technocore/internal/embeddings"
@@ -16,7 +17,7 @@ var benchCmd = &cobra.Command{
 	Use:   "bench",
 	Short: "Run performance benchmarks",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("=== Pipecamp Benchmarks ===")
+		fmt.Println("=== Technocore Benchmarks ===")
 	fmt.Println()
 
 		// Benchmark 1: Recipe vector search
@@ -32,6 +33,9 @@ var benchCmd = &cobra.Command{
 		// Benchmark 3: Embedding computation
 		fmt.Println("\n--- Embedding Computation ---")
 		benchEmbeddings()
+
+		fmt.Println("\n--- Brief Generation ---")
+		benchBrief()
 	},
 }
 
@@ -99,6 +103,31 @@ func benchFileSearch() {
 	}
 	elapsed := time.Since(start)
 	fmt.Printf("  %d files: %v (top-10)\n", fcount, elapsed)
+}
+
+func benchBrief() {
+	cfg := config.NewConfig()
+	m, err := cache.OpenManager(cfg, ".")
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	defer m.Close()
+
+	pm, err := m.GetMap()
+	if err != nil || pm == nil {
+		fmt.Println("  (skip: no project map; run 'technocore map' first)")
+		return
+	}
+
+	start := time.Now()
+	_, err = recipes.FindMatches(m.GlobalDB, "add health check", pm.Framework, pm.Signals, 3)
+	if err != nil {
+		fmt.Println("  (skip: recipe search failed:", err, ")")
+		return
+	}
+	elapsed := time.Since(start)
+	fmt.Printf("  brief recipe lookup: %v\n", elapsed)
 }
 
 func benchEmbeddings() {

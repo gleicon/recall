@@ -83,7 +83,7 @@ var installSkillCmd = &cobra.Command{
 			fmt.Printf("Installed %s\n", e.Name())
 		}
 
-		fmt.Printf("Pipecamp skill installed for %s at %s\n", target, destDir)
+		fmt.Printf("Technocore skill installed for %s at %s\n", target, destDir)
 	},
 }
 
@@ -161,7 +161,7 @@ func installClaudeHook(baseDir, skillDir string) {
 			}
 			cmd, _ := inner["command"].(string)
 			if contains(cmd, "technocore") {
-				fmt.Println("Pipecamp UserPromptSubmit hook already registered")
+				fmt.Println("Technocore UserPromptSubmit hook already registered")
 				return
 			}
 		}
@@ -273,7 +273,7 @@ func installCodexHook(baseDir, skillDir string) {
 			}
 			cmd, _ := inner["command"].(string)
 			if contains(cmd, "technocore") {
-				fmt.Println("Pipecamp UserPromptSubmit hook already registered")
+				fmt.Println("Technocore UserPromptSubmit hook already registered")
 				return
 			}
 		}

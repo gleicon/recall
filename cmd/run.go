@@ -45,14 +45,15 @@ var runSuggestCmd = &cobra.Command{
 			input = "n"
 		}
 
+		modelName, _ := cmd.Flags().GetString("model")
 		switch input[0] {
 		case 'y':
-			saveRun(task, filesChanged, tokensIn, tokensOut, testsPassed, followUp, "")
+			saveRun(task, filesChanged, modelName, tokensIn, tokensOut, testsPassed, followUp, "")
 		case 'i':
 			fmt.Print("Insight: ")
 			insight, _ := reader.ReadString('\n')
 			insight = strings.TrimSpace(insight)
-			saveRun(task, filesChanged, tokensIn, tokensOut, testsPassed, followUp, insight)
+			saveRun(task, filesChanged, modelName, tokensIn, tokensOut, testsPassed, followUp, insight)
 		default:
 			fmt.Println("Skipped.")
 		}
@@ -70,16 +71,17 @@ var runRecordCmd = &cobra.Command{
 		testsPassed, _ := cmd.Flags().GetInt("tests-passed")
 		followUp, _ := cmd.Flags().GetInt("follow-up-needed")
 		insight, _ := cmd.Flags().GetString("insight")
+		modelName, _ := cmd.Flags().GetString("model")
 
 		if task == "" {
 			fmt.Println("Error: --task required")
 			os.Exit(1)
 		}
-		saveRun(task, filesChanged, tokensIn, tokensOut, testsPassed, followUp, insight)
+		saveRun(task, filesChanged, modelName, tokensIn, tokensOut, testsPassed, followUp, insight)
 	},
 }
 
-func saveRun(task, filesChanged string, tokensIn, tokensOut, testsPassed, followUp int, insight string) {
+func saveRun(task, filesChanged, modelName string, tokensIn, tokensOut, testsPassed, followUp int, insight string) {
 	cfg := config.NewConfig()
 	m, err := cache.OpenManager(cfg, ".")
 	if err != nil {
@@ -99,7 +101,7 @@ func saveRun(task, filesChanged string, tokensIn, tokensOut, testsPassed, follow
 		fc = strings.Split(filesChanged, ",")
 	}
 
-	if err := m.StoreRun(task, framework, nil, fc, testsPassed, followUp, tokensIn, tokensOut, 1); err != nil {
+	if err := m.StoreRun(task, framework, modelName, nil, fc, testsPassed, followUp, tokensIn, tokensOut, 1); err != nil {
 		fmt.Println("Error saving run:", err)
 		return
 	}
@@ -126,6 +128,7 @@ func init() {
 		c.Flags().IntP("tokens-out", "o", 0, "Output tokens")
 		c.Flags().Int("tests-passed", 1, "Tests passed (1=yes, 0=no)")
 		c.Flags().Int("follow-up-needed", 0, "Follow-up needed (1=yes, 0=no)")
+		c.Flags().String("model", "", "Model name (default: default)")
 	}
 	runRecordCmd.Flags().String("insight", "", "Optional insight text")
 }

@@ -6,6 +6,6 @@
   "context_needed": ["provider config", "backend state", "variables", "outputs"],
   "avoid": ["do not commit .tfstate files"],
   "brief_template": "To add a Terraform AWS module:\n1. Create modules/<name>/ with main.tf, variables.tf, outputs.tf\n2. Define provider aws block in root main.tf\n3. Add backend config (S3 + DynamoDB for state locking)\n4. Use module in root: module 'vpc' { source = './modules/vpc' ... }\n5. Run 'terraform init && terraform plan'\n6. Add .gitignore for .terraform/, *.tfstate, *.tfvars",
-  "source": "pipecamp-defaults",
+  "source": "technocore-defaults",
   "tags": ["terraform", "aws", "iac", "devops"]
 }

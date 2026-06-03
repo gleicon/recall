@@ -63,6 +63,7 @@ func Detect(dir string) (*Map, error) {
 	if exists(dir, "go.mod") {
 		m.Language = "go"
 		m.PackageManager = "go"
+		m.Framework = "go"
 		m.Signals = append(m.Signals, "go.mod")
 		m.Entrypoints = append(m.Entrypoints, "main.go", "cmd/")
 		m.ModuleBoundaries = append(m.ModuleBoundaries, "internal/", "pkg/")

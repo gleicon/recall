@@ -17,7 +17,6 @@ func TestInitGlobalSchema(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Verify task_recipes has embedding column
 	var colCount int
 	err = dbConn.QueryRow(`SELECT COUNT(*) FROM pragma_table_info('task_recipes') WHERE name = 'embedding'`).Scan(&colCount)
 	if err != nil {
@@ -25,6 +24,17 @@ func TestInitGlobalSchema(t *testing.T) {
 	}
 	if colCount != 1 {
 		t.Fatal("expected embedding column in task_recipes")
+	}
+
+	for _, tbl := range []string{"conversations", "snippets", "agent_lessons"} {
+		var count int
+		err = dbConn.QueryRow(`SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=?`, tbl).Scan(&count)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if count != 1 {
+			t.Fatalf("expected %s table to exist", tbl)
+		}
 	}
 }
 

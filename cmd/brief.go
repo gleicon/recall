@@ -44,13 +44,12 @@ var briefCmd = &cobra.Command{
 			return
 		}
 
-		var projectSignals []string
-		for _, s := range pm.Signals {
-			projectSignals = append(projectSignals, s)
-		}
-		matches, err := recipes.FindMatches(gdb, task, pm.Framework, projectSignals, 3)
+		matches, err := recipes.FindMatches(gdb, task, pm.Framework, pm.Signals, 3)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Warning: recipe search failed:", err)
+		}
+		for _, m := range matches {
+			recipes.IncrementUseCount(gdb, m.Recipe.Name, 1.0)
 		}
 
 		var b strings.Builder

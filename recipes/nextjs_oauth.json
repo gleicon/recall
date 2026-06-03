@@ -6,6 +6,6 @@
   "context_needed": ["auth module", "middleware", "user schema", "env config", "login page", "callback route"],
   "avoid": ["do not send all pages", "do not send generated .next"],
   "brief_template": "To add OAuth to this Next.js App Router project:\n1. Check src/lib/auth.ts for existing auth provider setup\n2. Check src/middleware.ts for route protection\n3. Check prisma/schema.prisma for user/session tables\n4. Add callback route at src/app/api/auth/callback/route.ts\n5. Add login UI at src/app/login/page.tsx\n6. Verify env vars in src/env.ts or .env.local",
-  "source": "pipecamp-defaults",
+  "source": "technocore-defaults",
   "tags": ["auth", "oauth", "nextjs", "security"]
 }

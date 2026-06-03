@@ -125,17 +125,6 @@ func AggregateGlobalStats(cfg *config.Config) (*GlobalStats, error) {
 	return gs, nil
 }
 
-// UpdateRecipeStats increments use_count and updates avg_score for a recipe.
-func UpdateRecipeStats(gdb *sql.DB, recipeName string, score float64) error {
-	_, err := gdb.Exec(`
-		UPDATE task_recipes
-		SET use_count = use_count + 1,
-		    avg_score = ((avg_score * use_count) + ?) / (use_count + 1)
-		WHERE name = ?
-	`, score, recipeName)
-	return err
-}
-
 func nullFloat(n sql.NullFloat64) float64 {
 	if n.Valid {
 		return n.Float64
