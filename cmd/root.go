@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 
 	"github.com/spf13/cobra"
 )
 
 // Version is set at build time via ldflags: -X github.com/gleicon/recall/cmd.Version=v1.2.3
+// Falls back to the module version embedded by go install.
 var Version = "dev"
 
 var cfgFile string
@@ -33,6 +35,12 @@ func Execute() {
 }
 
 func init() {
+	if Version == "dev" {
+		if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" && info.Main.Version != "(devel)" {
+			Version = info.Main.Version
+		}
+	}
+
 	home, err := os.UserHomeDir()
 	if err != nil {
 		home = "."
