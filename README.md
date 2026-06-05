@@ -100,6 +100,27 @@ recall query "how do I structure middleware in this project"
 | `recall stats global` | Cross-project global statistics |
 | `recall stats insights` | Most/least useful recipes |
 
+### Feedback & Quality
+
+| Command | Purpose |
+|---|---|
+| `recall feedback --good` | Mark last query answer as accepted |
+| `recall feedback --bad --note "reason"` | Mark last query answer as rejected |
+
+### Tool Integration
+
+| Command | Purpose |
+|---|---|
+| `recall --version` | Print binary version |
+| `recall status` | JSON: version, mapped, mapped\_at, language, framework, files\_indexed |
+
+`recall status` is designed for scripts and editor plugins to detect whether recall is installed and a project has been bootstrapped:
+
+```bash
+recall status
+# {"version":"v0.3.1","mapped":true,"mapped_at":"2026-06-05 10:00:00","language":"go","framework":"go-module","files_indexed":87}
+```
+
 ### Maintenance
 
 | Command | Purpose |

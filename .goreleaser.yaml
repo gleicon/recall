@@ -10,6 +10,8 @@ before:
 
 builds:
   - main: ./...
+    ldflags:
+      - -s -w -X github.com/gleicon/recall/cmd.Version={{.Version}}
     env:
       - CGO_ENABLED=0
     goos:

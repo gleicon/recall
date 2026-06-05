@@ -8,6 +8,9 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// Version is set at build time via ldflags: -X github.com/gleicon/recall/cmd.Version=v1.2.3
+var Version = "dev"
+
 var cfgFile string
 var dataDir string
 
@@ -38,6 +41,7 @@ func init() {
 	if _, err := os.Stat(defaultDir); os.IsNotExist(err) {
 		os.MkdirAll(defaultDir, 0755)
 	}
+	rootCmd.Version = Version
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", filepath.Join(defaultDir, ".recall.yaml"), "config file")
 	rootCmd.PersistentFlags().StringVar(&dataDir, "datadir", defaultDir, "data directory")
 }
