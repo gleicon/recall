@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/gleicon/technocore/internal/db"
+	"github.com/gleicon/recall/internal/db"
 )
 
 func TestLoadFromFile(t *testing.T) {

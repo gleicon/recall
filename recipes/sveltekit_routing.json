@@ -6,6 +6,6 @@
   "context_needed": ["route files", "load functions", "server hooks", "layouts"],
   "avoid": ["do not use +page.server.ts for client-only data"],
   "brief_template": "To add a route in SvelteKit:\n1. Create src/routes/<path>/+page.svelte for the UI\n2. Add src/routes/<path>/+page.ts for client load\n3. Add src/routes/<path>/+page.server.ts for server load/actions\n4. Use +layout.svelte for shared wrappers\n5. Define types in app.d.ts if needed\n6. Handle errors with +error.svelte",
-  "source": "technocore-defaults",
+  "source": "recall-defaults",
   "tags": ["svelte", "sveltekit", "routing", "typescript"]
 }

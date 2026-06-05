@@ -7,8 +7,9 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
-	"github.com/gleicon/technocore/internal/embeddings"
+	"github.com/gleicon/recall/internal/embeddings"
 )
 
 // Recipe is a reusable task recipe.
@@ -227,5 +228,5 @@ func IncrementUseCount(db *sql.DB, name string, score float64) error {
 }
 
 func join(ss []string) string {
-	return " " + fmt.Sprintf("%v", ss)
+	return strings.Join(ss, " ")
 }

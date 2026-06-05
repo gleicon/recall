@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"sort"
 
-	"github.com/gleicon/technocore/internal/embeddings"
+	"github.com/gleicon/recall/internal/embeddings"
 )
 
 type BrainSearchResult struct {

@@ -6,6 +6,6 @@
   "context_needed": ["services", "networks", "volumes", "env files"],
   "avoid": ["do not commit .env files"],
   "brief_template": "To add a Docker Compose stack:\n1. Define services in docker-compose.yml with build/context or image\n2. Add depends_on for startup order\n3. Map ports and volumes\n4. Use .env file for secrets (add to .gitignore)\n5. Add healthchecks per service\n6. Run 'docker compose up -d' and 'docker compose logs -f'",
-  "source": "technocore-defaults",
+  "source": "recall-defaults",
   "tags": ["docker", "docker-compose", "devops", "containers"]
 }

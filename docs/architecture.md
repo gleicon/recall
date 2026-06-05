@@ -1,10 +1,10 @@
 # Architecture
 
-This document describes how Technocore's subsystems work. It is intended for contributors and advanced users who want to understand or extend the system.
+This document describes how Recall's subsystems work. It is intended for contributors and advanced users who want to understand or extend the system.
 
 ## Overview
 
-Technocore is a context engine with three layers:
+Recall is a context engine with three layers:
 
 1. **Ingestion Layer** — Detects project structure, indexes files, extracts summaries
 2. **Knowledge Layer** — Stores recipes, snippets, lessons, and conversation history
@@ -14,7 +14,7 @@ All data is stored in SQLite. All computation is local. No cloud APIs are requir
 
 ## Data Stores
 
-### Global Database (`~/.technocore/global.db`)
+### Global Database (`~/.recall/global.db`)
 
 | Table | Purpose |
 |---|---|
@@ -27,7 +27,7 @@ All data is stored in SQLite. All computation is local. No cloud APIs are requir
 | `snippets` | Reusable code blocks with semantic embeddings |
 | `agent_lessons` | Learned patterns about what works per framework/model |
 
-### Project Database (`~/.technocore/projects/<hash>/project.db`)
+### Project Database (`~/.recall/projects/<hash>/project.db`)
 
 | Table | Purpose |
 |---|---|
@@ -43,7 +43,7 @@ All data is stored in SQLite. All computation is local. No cloud APIs are requir
 
 ## Embeddings
 
-Technocore uses a **pluggable embedding system**:
+Recall uses a **pluggable embedding system**:
 
 ### Default: Feature Hashing
 
@@ -63,7 +63,7 @@ Properties:
 
 ### Local Model Embeddings
 
-When an OpenAI-compatible local server is detected (llama.app, llama.cpp, etc), Technocore can request embeddings via the `/v1/embeddings` endpoint. This requires:
+When an OpenAI-compatible local server is detected (llama.app, llama.cpp, etc), Recall can request embeddings via the `/v1/embeddings` endpoint. This requires:
 - A running local model server
 - An embedding-capable model loaded (e.g., `nomic-embed-text`)
 
@@ -143,7 +143,7 @@ Save conversation to brain
 
 ## Learning
 
-Technocore learns from three sources:
+Recall learns from three sources:
 
 ### Recipe Feedback
 
@@ -211,7 +211,7 @@ To add a new embedding backend:
 To add a new recipe source:
 
 1. Add JSON files to `recipes/` directory
-2. Run `technocore recipes seed`
+2. Run `recall recipes seed`
 
 To add a new assistant skill target:
 

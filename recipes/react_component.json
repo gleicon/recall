@@ -6,6 +6,6 @@
   "context_needed": ["component props", "state", "styling approach", "testing"],
   "avoid": ["do not mix container and presentational logic"],
   "brief_template": "To add a React component:\n1. Choose location: src/components/ or src/app/ (Next.js)\n2. Define Props interface/type\n3. Use functional component with hooks (useState, useEffect)\n4. Extract shared logic into custom hooks or utils\n5. Style: CSS modules, Tailwind, styled-components, or CSS-in-JS\n6. Add test: React Testing Library + vitest/jest\n7. Add Storybook story if design system exists",
-  "source": "technocore-defaults",
+  "source": "recall-defaults",
   "tags": ["react", "component", "typescript", "frontend"]
 }

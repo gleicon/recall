@@ -7,15 +7,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
-	"github.com/gleicon/technocore/internal/config"
-	"github.com/gleicon/technocore/internal/db"
-	"github.com/gleicon/technocore/internal/embeddings"
-	"github.com/gleicon/technocore/internal/project"
-	"github.com/gleicon/technocore/internal/summarizer"
+	"github.com/gleicon/recall/internal/config"
+	"github.com/gleicon/recall/internal/db"
+	"github.com/gleicon/recall/internal/embeddings"
+	"github.com/gleicon/recall/internal/project"
+	"github.com/gleicon/recall/internal/summarizer"
 )
 
 // Manager handles cache operations for a project.
@@ -23,6 +25,7 @@ type Manager struct {
 	GlobalDB   *sql.DB
 	ProjectDB  *sql.DB
 	ProjectDir string
+	EmbedModel string
 }
 
 // OpenManager opens both global and project DBs.
@@ -131,21 +134,28 @@ func (m *Manager) BuildCache(sentences int) error {
 		}
 	}
 
+	// Detect embed model mismatch — warn user if they changed models since last build
+	var storedEmbedModel string
+	m.ProjectDB.QueryRow(`SELECT embed_model FROM project_map WHERE id=1`).Scan(&storedEmbedModel)
+	if storedEmbedModel != "" && storedEmbedModel != m.EmbedModel {
+		fmt.Fprintf(os.Stderr, "Warning: embed model changed from %q to %q — re-embedding all files\n", storedEmbedModel, m.EmbedModel)
+	}
+
 	ignored := make(map[string]bool)
 	for _, d := range pm.IgnoredAreas {
 		ignored[d] = true
 	}
 
 	// Walk and index files
-	err = filepath.Walk(m.ProjectDir, func(path string, info os.FileInfo, err error) error {
+	err = filepath.WalkDir(m.ProjectDir, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return nil
 		}
-		if info.IsDir() {
+		if d.IsDir() {
 			if path == m.ProjectDir {
 				return nil
 			}
-			if ignored[info.Name()] || strings.HasPrefix(info.Name(), ".") {
+			if ignored[d.Name()] || strings.HasPrefix(d.Name(), ".") {
 				return filepath.SkipDir
 			}
 			return nil
@@ -153,14 +163,15 @@ func (m *Manager) BuildCache(sentences int) error {
 		if !shouldIndex(path) {
 			return nil
 		}
-		if err := m.indexFile(path, sentences); err != nil {
-			// Log and continue
-		}
+		_ = m.indexFile(path, sentences)
 		return nil
 	})
 	if err != nil {
 		return err
 	}
+
+	// Record the embed model used so future builds can detect changes
+	m.ProjectDB.Exec(`UPDATE project_map SET embed_model=? WHERE id=1`, m.EmbedModel)
 
 	// Build subsystem summaries heuristically
 	return m.buildSubsystems()
@@ -181,13 +192,13 @@ func (m *Manager) Refresh(sentences int) error {
 		ignored[d] = true
 	}
 
-	return filepath.Walk(m.ProjectDir, func(path string, info os.FileInfo, err error) error {
-		if err != nil || info.IsDir() {
-			if info != nil && info.IsDir() {
+	return filepath.WalkDir(m.ProjectDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			if d != nil && d.IsDir() {
 				if path == m.ProjectDir {
 					return nil
 				}
-				if ignored[info.Name()] || strings.HasPrefix(info.Name(), ".") {
+				if ignored[d.Name()] || strings.HasPrefix(d.Name(), ".") {
 					return filepath.SkipDir
 				}
 			}
@@ -259,10 +270,14 @@ func (m *Manager) indexFile(path string, sentences int) error {
 		summary = ""
 	}
 
+	// Compute file-level embedding for vector search
+	fileEmb := embeddings.ComputeSmart(summary+" "+content[:min(len(content), 2000)], m.EmbedModel)
+	fileEmbBytes := embeddings.ToBytes(fileEmb)
+
 	var fileID int64
 	row := m.ProjectDB.QueryRow(`SELECT id FROM files WHERE path=?`, path)
 	if err := row.Scan(&fileID); err == sql.ErrNoRows {
-		res, err := m.ProjectDB.Exec(`INSERT INTO files(path, hash, content, summary) VALUES (?,?,?,?)`, path, fh, content, summary)
+		res, err := m.ProjectDB.Exec(`INSERT INTO files(path, hash, content, summary, embedding) VALUES (?,?,?,?,?)`, path, fh, content, summary, fileEmbBytes)
 		if err != nil {
 			return err
 		}
@@ -270,7 +285,7 @@ func (m *Manager) indexFile(path string, sentences int) error {
 	} else if err != nil {
 		return err
 	} else {
-		_, err = m.ProjectDB.Exec(`UPDATE files SET hash=?, content=?, summary=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`, fh, content, summary, fileID)
+		_, err = m.ProjectDB.Exec(`UPDATE files SET hash=?, content=?, summary=?, embedding=?, updated_at=CURRENT_TIMESTAMP WHERE id=?`, fh, content, summary, fileEmbBytes, fileID)
 		if err != nil {
 			return err
 		}
@@ -290,7 +305,7 @@ func (m *Manager) indexFile(path string, sentences int) error {
 	m.ProjectDB.Exec(`DELETE FROM chunks WHERE file_id=?`, fileID)
 	chunks := chunkText(content, 1500)
 	for _, c := range chunks {
-		emb := embeddings.Compute(c)
+		emb := embeddings.ComputeSmart(c, m.EmbedModel)
 		_, err := m.ProjectDB.Exec(`INSERT INTO chunks(file_id, chunk_text, embedding) VALUES (?,?,?)`, fileID, c, embeddings.ToBytes(emb))
 		if err != nil {
 			return err
@@ -446,7 +461,7 @@ func (m *Manager) Cleanup(days int) error {
 	if days <= 0 {
 		days = 30
 	}
-	_, err := m.ProjectDB.Exec(`DELETE FROM memories WHERE created_at < datetime('now', '-`+fmt.Sprint(days)+` days')`)
+	_, err := m.ProjectDB.Exec(`DELETE FROM memories WHERE created_at < datetime('now', ?)`, "-"+strconv.Itoa(days)+" days")
 	if err != nil {
 		return err
 	}

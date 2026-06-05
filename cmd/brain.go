@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gleicon/technocore/internal/cache"
-	"github.com/gleicon/technocore/internal/config"
-	"github.com/gleicon/technocore/internal/db"
-	"github.com/gleicon/technocore/internal/embeddings"
+	"github.com/gleicon/recall/internal/cache"
+	"github.com/gleicon/recall/internal/config"
+	"github.com/gleicon/recall/internal/db"
+	"github.com/gleicon/recall/internal/embeddings"
 	"github.com/spf13/cobra"
 )
 
@@ -147,7 +147,13 @@ var brainSearchCmd = &cobra.Command{
 		vector, _ := cmd.Flags().GetBool("vector")
 
 		if vector {
-			qVec := embeddings.ComputeSmart(keyword)
+			cfg2 := config.NewConfig()
+			settings, _ := cfg2.LoadSettings()
+			embedModel := ""
+			if settings != nil {
+				embedModel = settings.EmbedModel
+			}
+			qVec := embeddings.ComputeSmart(keyword, embedModel)
 			snippets, err := cache.SearchSnippetsByVector(gdb, qVec, limit)
 			if err != nil {
 				fmt.Println("Error:", err)

@@ -5,10 +5,13 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gleicon/technocore/internal/cache"
-	"github.com/gleicon/technocore/internal/config"
-	"github.com/gleicon/technocore/internal/db"
-	"github.com/gleicon/technocore/internal/recipes"
+	"github.com/gleicon/recall/internal/cache"
+	"github.com/gleicon/recall/internal/config"
+	"github.com/gleicon/recall/internal/db"
+	"github.com/gleicon/recall/internal/embeddings"
+	"github.com/gleicon/recall/internal/recipes"
+	"github.com/gleicon/recall/internal/search"
+	"github.com/gleicon/recall/internal/summarizer"
 	"github.com/spf13/cobra"
 )
 
@@ -18,21 +21,27 @@ var briefCmd = &cobra.Command{
 	Args:  cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.NewConfig()
+		settings, _ := cfg.LoadSettings()
+		embedModel := ""
+		if settings != nil {
+			embedModel = settings.EmbedModel
+		}
+
 		m, err := cache.OpenManager(cfg, ".")
 		if err != nil {
 			fmt.Println("Error:", err)
 			return
 		}
 		defer m.Close()
+		m.EmbedModel = embedModel
 
 		task := strings.Join(args, " ")
 		pm, err := m.GetMap()
 		if err != nil || pm == nil {
-			fmt.Println("No project map found. Run 'technocore map' first.")
+			fmt.Println("No project map found. Run 'recall map' first.")
 			return
 		}
 
-		// Fetch matching recipes via vector RAG
 		gdb, err := db.Open(cfg.GlobalDBPath)
 		if err != nil {
 			fmt.Println("Error opening global db:", err)
@@ -48,66 +57,104 @@ var briefCmd = &cobra.Command{
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Warning: recipe search failed:", err)
 		}
-		for _, m := range matches {
-			recipes.IncrementUseCount(gdb, m.Recipe.Name, 1.0)
+		for _, match := range matches {
+			recipes.IncrementUseCount(gdb, match.Recipe.Name, 1.0)
 		}
 
 		var b strings.Builder
+		var tokRecipes, tokSubsystems, tokFiles, tokPriorArt int
+
 		fmt.Fprintf(&b, "# Brief: %s\n\n", task)
 		fmt.Fprintf(&b, "## Project Context\n")
 		fmt.Fprintf(&b, "- Language: %s\n", pm.Language)
 		fmt.Fprintf(&b, "- Framework: %s\n", pm.Framework)
 		fmt.Fprintf(&b, "- Package Manager: %s\n", pm.PackageManager)
-		fmt.Fprintf(&b, "- Signals: %v\n", pm.Signals)
-		fmt.Fprintf(&b, "- Entrypoints: %v\n", pm.Entrypoints)
 
-		// Subsystems
 		rows, err := m.ProjectDB.Query(`SELECT name, summary FROM subsystem_summaries`)
 		if err == nil {
-			defer rows.Close()
 			fmt.Fprintf(&b, "\n## Subsystems\n")
 			for rows.Next() {
 				var name, summary string
 				if err := rows.Scan(&name, &summary); err != nil {
 					continue
 				}
+				if len(summary) > 300 {
+					if short, err := summarizer.Summarize(summary, 2); err == nil {
+						summary = short
+					}
+				}
+				tokSubsystems += approxTokens(summary)
 				fmt.Fprintf(&b, "- **%s**: %s\n", name, summary)
 			}
+			rows.Close()
 		}
 
-		// Recipes
 		if len(matches) > 0 {
 			fmt.Fprintf(&b, "\n## Recipes\n")
-			for _, m := range matches {
-				fmt.Fprintf(&b, "- **%s** (score: %.2f)\n", m.Recipe.Name, m.Score)
-				fmt.Fprintf(&b, "  %s\n", indent(m.Recipe.BriefTemplate, 2))
+			for _, match := range matches {
+				tmpl := match.Recipe.BriefTemplate
+				if len(tmpl) > 300 {
+					if short, err := summarizer.Summarize(tmpl, 2); err == nil {
+						tmpl = short
+					}
+				}
+				tokRecipes += approxTokens(tmpl)
+				fmt.Fprintf(&b, "- **%s** (score: %.2f)\n  %s\n", match.Recipe.Name, match.Score, indent(tmpl, 2))
 			}
 		} else {
-			fmt.Fprintln(os.Stderr, "No relevant recipes found. Run 'technocore recipes seed' to load defaults.")
+			fmt.Fprintln(os.Stderr, "No relevant recipes found. Run 'recall recipes seed' to load defaults.")
 		}
 
-		// Relevant files
-		like := "%" + task + "%"
-		frows, err := m.ProjectDB.Query(`SELECT path, summary FROM files WHERE summary LIKE ? OR path LIKE ? LIMIT 10`, like, like)
-		if err == nil {
-			defer frows.Close()
+		eng := search.NewEngine(m.ProjectDB, embedModel)
+		fileResults, err := eng.Query(task, 5)
+		if err == nil && len(fileResults) > 0 {
 			fmt.Fprintf(&b, "\n## Relevant Files\n")
-			for frows.Next() {
-				var p, s string
-				if err := frows.Scan(&p, &s); err != nil {
-					continue
+			for _, r := range fileResults {
+				summary := r.Summary
+				if len(summary) > 200 {
+					if short, err := summarizer.Summarize(summary, 1); err == nil {
+						summary = short
+					}
 				}
-				fmt.Fprintf(&b, "- `%s`: %s\n", p, s)
+				tokFiles += approxTokens(summary)
+				fmt.Fprintf(&b, "- `%s`: %s\n", r.Path, summary)
+			}
+		}
+
+		qVec := embeddings.ComputeSmartWithClient(task, embedModel, eng.LLMClient)
+		if len(qVec) > 0 {
+			convs, err := cache.FindSimilarConversations(gdb, qVec, 2)
+			if err == nil && len(convs) > 0 {
+				fmt.Fprintf(&b, "\n## Prior Art\n")
+				for _, c := range convs {
+					resp := c.Response
+					if len(resp) > 300 {
+						if short, err := summarizer.Summarize(resp, 2); err == nil {
+							resp = short
+						}
+					}
+					tokPriorArt += approxTokens(resp)
+					fmt.Fprintf(&b, "- **%s** [%s]\n  %s\n", c.Task, c.ModelName, indent(resp, 2))
+				}
 			}
 		}
 
 		fmt.Fprintf(&b, "\n## Task\n%s\n", task)
 		fmt.Println(b.String())
+
+		total := tokRecipes + tokSubsystems + tokFiles + tokPriorArt
+		fmt.Fprintf(os.Stderr, "Tokens recalled: ~%d (recipes: %d, subsystems: %d, files: %d, prior art: %d)\n",
+			total, tokRecipes, tokSubsystems, tokFiles, tokPriorArt)
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(briefCmd)
+}
+
+// approxTokens estimates BPE token count from word count (words * 1.3).
+func approxTokens(s string) int {
+	return int(float64(len(strings.Fields(s))) * 1.3)
 }
 
 func indent(s string, n int) string {

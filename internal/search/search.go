@@ -6,7 +6,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/gleicon/technocore/internal/embeddings"
+	"github.com/gleicon/recall/internal/embeddings"
+	"github.com/gleicon/recall/internal/llm"
 )
 
 // Result is a single search result.
@@ -19,21 +20,24 @@ type Result struct {
 
 // Engine performs search over the project DB.
 type Engine struct {
-	DB *sql.DB
+	DB         *sql.DB
+	EmbedModel string
+	LLMClient  *llm.Client
 }
 
-// NewEngine creates a search engine.
-func NewEngine(db *sql.DB) *Engine {
-	return &Engine{DB: db}
+func NewEngine(db *sql.DB, embedModel string) *Engine {
+	return &Engine{
+		DB:         db,
+		EmbedModel: embedModel,
+		LLMClient:  llm.Detect(),
+	}
 }
 
-// Query searches the project cache using FTS5 and optional vector re-ranking.
 func (e *Engine) Query(q string, limit int) ([]Result, error) {
 	if limit <= 0 {
 		limit = 10
 	}
 
-	// Step 1: FTS5 candidate retrieval
 	ftsQuery := strings.Join(strings.Fields(q), " ")
 	rows, err := e.DB.Query(`
 		SELECT path, content, summary FROM file_search
@@ -42,7 +46,6 @@ func (e *Engine) Query(q string, limit int) ([]Result, error) {
 		LIMIT ?
 	`, ftsQuery, limit*3)
 	if err != nil {
-		// FTS5 may fail on empty db or syntax issues
 		return nil, fmt.Errorf("fts5 query: %w", err)
 	}
 	defer rows.Close()
@@ -53,25 +56,35 @@ func (e *Engine) Query(q string, limit int) ([]Result, error) {
 		if err := rows.Scan(&r.Path, &r.Content, &r.Summary); err != nil {
 			continue
 		}
-		r.Score = 1.0 // base FTS score
+		r.Score = 1.0 // base FTS rank
 		candidates = append(candidates, r)
 	}
 	if len(candidates) == 0 {
 		return []Result{}, nil
 	}
 
-	// Step 2: compute embedding for query and re-rank candidates by vector similarity
-	qVec := embeddings.Compute(q)
-	for i := range candidates {
-		cVec := embeddings.Compute(candidates[i].Content)
-		cos := embeddings.Cosine(qVec, cVec)
-		// Combine FTS rank and cosine similarity
-		candidates[i].Score = 0.5 + 0.5*cos
+	qVec := embeddings.ComputeSmartWithClient(q, e.EmbedModel, e.LLMClient)
+	if len(qVec) > embeddings.Dim {
+		reranked := false
+		for i := range candidates {
+			var embBytes []byte
+			e.DB.QueryRow(`SELECT embedding FROM files WHERE path=?`, candidates[i].Path).Scan(&embBytes)
+			if len(embBytes) == 0 {
+				continue
+			}
+			cVec := embeddings.FromBytes(embBytes)
+			if len(cVec) != len(qVec) {
+				continue // dimension mismatch — stored with different model
+			}
+			candidates[i].Score = embeddings.Cosine(qVec, cVec)
+			reranked = true
+		}
+		if reranked {
+			sort.Slice(candidates, func(i, j int) bool {
+				return candidates[i].Score > candidates[j].Score
+			})
+		}
 	}
-
-	sort.Slice(candidates, func(i, j int) bool {
-		return candidates[i].Score > candidates[j].Score
-	})
 
 	if len(candidates) > limit {
 		candidates = candidates[:limit]
@@ -109,11 +122,23 @@ func (e *Engine) ChunkQuery(q string, limit int) ([]Result, error) {
 		chunks = append(chunks, c)
 	}
 
-	qVec := embeddings.Compute(q)
+	qVec := embeddings.ComputeSmartWithClient(q, e.EmbedModel, e.LLMClient)
 	var results []Result
 	for _, c := range chunks {
-		cVec := embeddings.Compute(c.text)
-		score := embeddings.Cosine(qVec, cVec)
+		var embBytes []byte
+		e.DB.QueryRow(`SELECT embedding FROM chunks WHERE file_id=? AND chunk_text=?`, c.fileID, c.text).Scan(&embBytes)
+
+		var score float64
+		if len(embBytes) > 0 && len(qVec) > embeddings.Dim {
+			cVec := embeddings.FromBytes(embBytes)
+			if len(cVec) == len(qVec) {
+				score = embeddings.Cosine(qVec, cVec)
+			}
+		}
+		if score == 0 {
+			score = 0.5 // FTS match but no vector score
+		}
+
 		var path string
 		e.DB.QueryRow(`SELECT path FROM files WHERE id=?`, c.fileID).Scan(&path)
 		results = append(results, Result{

@@ -6,11 +6,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gleicon/technocore/internal/cache"
-	"github.com/gleicon/technocore/internal/config"
-	"github.com/gleicon/technocore/internal/db"
-	"github.com/gleicon/technocore/internal/llm"
-	"github.com/gleicon/technocore/internal/recipes"
+	"github.com/gleicon/recall/internal/cache"
+	"github.com/gleicon/recall/internal/config"
+	"github.com/gleicon/recall/internal/db"
+	"github.com/gleicon/recall/internal/llm"
+	"github.com/gleicon/recall/internal/recipes"
 	"github.com/spf13/cobra"
 )
 
@@ -33,7 +33,7 @@ var queryCmd = &cobra.Command{
 
 		pm, err := m.GetMap()
 		if err != nil || pm == nil {
-			fmt.Println("No project map found. Run 'technocore map' first.")
+			fmt.Println("No project map found. Run 'recall map' first.")
 			return
 		}
 
@@ -66,6 +66,7 @@ var queryCmd = &cobra.Command{
 			}
 		}
 		brief := b.String()
+		fmt.Fprintf(os.Stderr, "Tokens recalled: ~%d\n", approxTokens(brief))
 
 		client := llm.Detect()
 		if forceDelegate || client == nil {
@@ -149,13 +150,12 @@ var queryCmd = &cobra.Command{
 			return
 		}
 
-		upperResp := strings.ToUpper(resp)
-		delegated := strings.Contains(upperResp, "DELEGATE")
+		lowerResp := strings.ToLower(resp)
+		delegated := strings.Contains(lowerResp, "delegate")
 		delegationReason := ""
 		if delegated {
-			idx := strings.Index(upperResp, "DELEGATE")
-			if idx != -1 {
-				delegationReason = strings.TrimSpace(resp[idx+len("DELEGATE"):])
+			if idx := strings.Index(lowerResp, "delegate"); idx != -1 {
+				delegationReason = strings.TrimSpace(resp[idx+len("delegate"):])
 			}
 			if delegationReason == "" {
 				delegationReason = "needs larger model"
@@ -196,8 +196,8 @@ var queryCmd = &cobra.Command{
 		}
 
 		snippets := cache.ExtractSnippets(resp, pm.Language, pm.Framework)
-		for _, s := range snippets {
-			if saveErr := cache.StoreSnippet(gdb, &s); saveErr != nil {
+		for i := range snippets {
+			if saveErr := cache.StoreSnippet(gdb, &snippets[i]); saveErr != nil {
 				fmt.Fprintln(os.Stderr, "Warning: failed to save snippet:", saveErr)
 			}
 		}

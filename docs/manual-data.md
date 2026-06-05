@@ -1,6 +1,6 @@
 # Manual Data Management
 
-Technocore accumulates data automatically, but you can also add, edit, and curate data manually.
+Recall accumulates data automatically, but you can also add, edit, and curate data manually.
 
 ## Adding Recipes
 
@@ -26,12 +26,12 @@ Recipes are the core reusable knowledge unit. They describe how to perform a com
 
 - `name` is required, must be unique within global.db
 - `brief_template` is required — this is the text shown in briefs
-- `framework` should match what `technocore map` detects (e.g., `go`, `nextjs`, `fastapi`)
+- `framework` should match what `recall map` detects (e.g., `go`, `nextjs`, `fastapi`)
 - `language` is the primary language string
 - `signals` are file/directory names whose presence indicates this recipe is relevant
 - `context_needed` lists files or concepts the assistant should check
 - `avoid` lists things the assistant should not send (reduces token waste)
-- `source` is metadata (e.g., `technocore-defaults`, `user-created`, `team-shared`)
+- `source` is metadata (e.g., `recall-defaults`, `user-created`, `team-shared`)
 - `tags` are searchable keywords
 
 ### Adding a Recipe
@@ -53,37 +53,37 @@ cat > ~/my-recipe.json <<'EOF'
 EOF
 
 # Add to global.db
-technocore recipes add --from-file ~/my-recipe.json
+recall recipes add --from-file ~/my-recipe.json
 
 # Verify
-technocore recipes list | grep circuit_breaker
+recall recipes list | grep circuit_breaker
 ```
 
 ### Editing Recipes
 
-Technocore does not have an edit command. Recipes are edited as JSON files and re-added:
+Recall does not have an edit command. Recipes are edited as JSON files and re-added:
 
 ```bash
 # The ON CONFLICT clause updates existing recipes by name
-technocore recipes add --from-file ~/updated-recipe.json
+recall recipes add --from-file ~/updated-recipe.json
 ```
 
 Or use a database tool directly:
 
 ```bash
-sqlite3 ~/.technocore/global.db "UPDATE task_recipes SET brief_template = 'new text' WHERE name = 'add_circuit_breaker_go';"
+sqlite3 ~/.recall/global.db "UPDATE task_recipes SET brief_template = 'new text' WHERE name = 'add_circuit_breaker_go';"
 ```
 
 ### Recipe Directory
 
-Default recipes live in `~/.technocore/recipes/` as individual `.json` files. You can:
+Default recipes live in `~/.recall/recipes/` as individual `.json` files. You can:
 
 ```bash
 # Add new files here
-cp ~/my-custom-recipe.json ~/.technocore/recipes/
+cp ~/my-custom-recipe.json ~/.recall/recipes/
 
 # Re-seed to load them (skips duplicates, updates changed ones)
-technocore recipes seed
+recall recipes seed
 ```
 
 ## Adding Insights
@@ -92,15 +92,15 @@ Store institutional knowledge about a project:
 
 ```bash
 # Single insight
-technocore learn "always pass context.Context as first argument to service methods"
+recall learn "always pass context.Context as first argument to service methods"
 
 # Multiple insights from a file
 while read -r line; do
-    [ -n "$line" ] && technocore learn "$line"
+    [ -n "$line" ] && recall learn "$line"
 done < ~/project-insights.txt
 
 # View stored insights
-technocore cache inspect | grep -A1 "^\[insight\]"
+recall cache inspect | grep -A1 "^\[insight\]"
 ```
 
 ## Adding Code Snippets
@@ -109,7 +109,7 @@ Snippets are extracted automatically from local model responses, but you can add
 
 ```bash
 # Direct SQLite insert (requires understanding the schema)
-sqlite3 ~/.technocore/global.db <<'EOF'
+sqlite3 ~/.recall/global.db <<'EOF'
 INSERT INTO snippets (name, language, framework, code, context, source)
 VALUES (
   'generic_retry_loop',
@@ -127,7 +127,7 @@ EOF
 Teach the brain about what works:
 
 ```bash
-sqlite3 ~/.technocore/global.db <<'EOF'
+sqlite3 ~/.recall/global.db <<'EOF'
 INSERT INTO agent_lessons (pattern, framework, model_name, success_rate, context)
 VALUES (
   'small models handle go refactoring well',
@@ -144,7 +144,7 @@ EOF
 Record a past interaction you had with an assistant:
 
 ```bash
-sqlite3 ~/.technocore/global.db <<'EOF'
+sqlite3 ~/.recall/global.db <<'EOF'
 INSERT INTO conversations (task, prompt, response, model_name, delegated, delegation_reason)
 VALUES (
   'refactor auth middleware',
@@ -167,7 +167,7 @@ FILE="$1"
 FRAMEWORK="$2"
 
 awk '/^## /{name=$2} /^- /{print name "|" substr($0,3)}' "$FILE" | while IFS='|' read -r name tip; do
-    technocore learn "[$name] $tip"
+    recall learn "[$name] $tip"
 done
 ```
 
@@ -187,10 +187,10 @@ Example input (`tips.md`):
 
 ```bash
 # Export all recipes as JSON
-sqlite3 ~/.technocore/global.db "SELECT json_object('name', name, 'framework', framework, 'brief_template', brief_template) FROM task_recipes;" > recipes-export.jsonl
+sqlite3 ~/.recall/global.db "SELECT json_object('name', name, 'framework', framework, 'brief_template', brief_template) FROM task_recipes;" > recipes-export.jsonl
 
 # Export all snippets
-cd ~/.technocore
+cd ~/.recall
 sqlite3 global.db ".mode json" "SELECT * FROM snippets;" > snippets-export.json
 
 # Export conversation history
@@ -203,6 +203,6 @@ sqlite3 global.db ".mode csv" "SELECT task, model_name, delegated, created_at FR
 # Import recipes from JSONL
 while read -r line; do
     echo "$line" > /tmp/recipe.json
-    technocore recipes add --from-file /tmp/recipe.json
+    recall recipes add --from-file /tmp/recipe.json
 done < recipes-import.jsonl
 ```

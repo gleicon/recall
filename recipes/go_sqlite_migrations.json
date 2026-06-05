@@ -6,6 +6,6 @@
   "context_needed": ["db connection", "migration runner", "schema version"],
   "avoid": ["do not use go-migrate if project uses another tool"],
   "brief_template": "To add SQLite migrations to a Go project:\n1. Choose migration tool: golang-migrate, sqlc, or manual\n2. Create migrations/ directory with timestamped .up.sql and .down.sql files\n3. Wire migration runner into main.go or cmd/ startup\n4. Ensure foreign keys are enabled: _pragma=foreign_keys(1)\n5. Add integration test that runs migrations on :memory: DB",
-  "source": "technocore-defaults",
+  "source": "recall-defaults",
   "tags": ["database", "sqlite", "go", "migration"]
 }

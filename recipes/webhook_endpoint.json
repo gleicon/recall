@@ -6,6 +6,6 @@
   "context_needed": ["signature verification", "idempotency", "retry logic"],
   "avoid": ["do not process webhooks synchronously"],
   "brief_template": "To add a webhook endpoint:\n1. Create POST route at /webhooks/<provider>\n2. Verify signature using provider secret + HMAC\n3. Return 200 quickly (before processing)\n4. Queue event for background worker (don't block response)\n5. Implement idempotency with event ID deduplication\n6. Log full payload (but scrub sensitive fields)\n7. Handle retries gracefully (idempotent processing)",
-  "source": "technocore-defaults",
+  "source": "recall-defaults",
   "tags": ["webhooks", "api", "security", "async"]
 }

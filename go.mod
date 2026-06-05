@@ -1,4 +1,4 @@
-module github.com/gleicon/technocore
+module github.com/gleicon/recall
 
 go 1.26.2
 

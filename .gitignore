@@ -1,4 +1,4 @@
-technocore
+recall
 *.db
 # Added by goreleaser init:
 dist/

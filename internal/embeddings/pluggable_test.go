@@ -5,7 +5,7 @@ import (
 )
 
 func TestComputeSmartFallback(t *testing.T) {
-	vec := ComputeSmart("test text for embedding")
+	vec := ComputeSmart("test text for embedding", "")
 	if len(vec) == 0 {
 		t.Fatal("expected non-empty vector")
 	}

@@ -6,6 +6,6 @@
   "context_needed": ["store definition", "composables", "component usage"],
   "avoid": ["do not mutate state outside store actions"],
   "brief_template": "To add a Pinia store in Vue:\n1. Install pinia if not present\n2. Create src/stores/<name>.ts with defineStore\n3. Define state, getters, and actions\n4. Register Pinia in src/main.ts: app.use(createPinia())\n5. Use store in components: const store = useNameStore()\n6. Prefer storeToRefs for destructuring reactive state",
-  "source": "technocore-defaults",
+  "source": "recall-defaults",
   "tags": ["vue", "pinia", "state-management", "typescript"]
 }

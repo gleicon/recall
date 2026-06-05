@@ -1,6 +1,6 @@
 # Scripting and Automation
 
-Technocore is designed for shell integration. Every command exits with conventional codes and produces machine-parseable output.
+Recall is designed for shell integration. Every command exits with conventional codes and produces machine-parseable output.
 
 ## Exit Codes
 
@@ -16,15 +16,15 @@ Most commands produce plain text. Use `grep`, `awk`, `sed`, or `jq` (for JSON re
 
 ```bash
 # Extract just the recipe names
-technocore recipes list | grep '^- ' | sed 's/^- //' | cut -d' ' -f1
+recall recipes list | grep '^- ' | sed 's/^- //' | cut -d' ' -f1
 
 # Check if any recipes exist
-if technocore recipes list | grep -q 'Total: 0'; then
-    technocore recipes seed
+if recall recipes list | grep -q 'Total: 0'; then
+    recall recipes seed
 fi
 
 # Get the framework of the current project
-technocore cache inspect | grep '^framework:' | cut -d' ' -f2
+recall cache inspect | grep '^framework:' | cut -d' ' -f2
 ```
 
 ## Pre-commit Hook
@@ -41,9 +41,9 @@ if [ -z "$CHANGED" ]; then
     exit 0
 fi
 
-# Only record if we're in a project with a technocore map
+# Only record if we're in a project with a recall map
 if [ -f "go.mod" ] || [ -f "package.json" ] || [ -f "Cargo.toml" ]; then
-    technocore run record \
+    recall run record \
         --task "pre-commit changes" \
         --files-changed "$CHANGED" \
         --tokens-in 0 \
@@ -62,21 +62,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Cache Technocore index
+      - name: Cache Recall index
         uses: actions/cache@v4
         with:
-          path: ~/.technocore/projects
-          key: technocore-${{ hashFiles('**/*.go', 'go.mod') }}
+          path: ~/.recall/projects
+          key: recall-${{ hashFiles('**/*.go', 'go.mod') }}
 
       - name: Build project cache
         run: |
-          technocore map
-          technocore cache build
+          recall map
+          recall cache build
 
       - name: Generate brief for PR description
         run: |
           echo "## Context"
-          technocore brief "review this PR" >> $GITHUB_STEP_SUMMARY
+          recall brief "review this PR" >> $GITHUB_STEP_SUMMARY
 ```
 
 ## Daily Standup / Journal
@@ -84,19 +84,19 @@ jobs:
 Record daily work automatically:
 
 ```bash
-# ~/bin/daily-technocore
+# ~/bin/daily-recall
 #!/bin/bash
 DIR="${1:-.}"
 cd "$DIR"
 
 # Build cache if stale
-technocore cache refresh 2>/dev/null || technocore cache build
+recall cache refresh 2>/dev/null || recall cache build
 
 # Record today's activity
 if git rev-parse --git-dir > /dev/null 2>&1; then
     FILES=$(git diff --name-only HEAD@{1.day.ago} 2>/dev/null | paste -sd ',' -)
     if [ -n "$FILES" ]; then
-        technocore run record \
+        recall run record \
             --task "daily work" \
             --files-changed "$FILES" \
             --tokens-in 0 \
@@ -108,7 +108,7 @@ fi
 Add to cron:
 
 ```bash
-0 18 * * * ~/bin/daily-technocore ~/projects/my-app
+0 18 * * * ~/bin/daily-recall ~/projects/my-app
 ```
 
 ## FZF Integration
@@ -117,9 +117,9 @@ Search your brain with fzf:
 
 ```bash
 # ~/.bashrc or ~/.zshrc
-ftechnocore() {
+frecall() {
     local selection
-    selection=$(technocore brain search "$1" 2>/dev/null | fzf --height 40% --reverse)
+    selection=$(recall brain search "$1" 2>/dev/null | fzf --height 40% --reverse)
     if [ -n "$selection" ]; then
         echo "$selection"
     fi
@@ -142,7 +142,7 @@ if [ -z "$NAME" ] || [ -z "$FRAMEWORK" ] || [ -z "$TEMPLATE" ]; then
     exit 1
 fi
 
-LANGUAGE=$(technocore cache inspect | grep '^language:' | cut -d' ' -f2)
+LANGUAGE=$(recall cache inspect | grep '^language:' | cut -d' ' -f2)
 
 cat > "/tmp/${NAME}.json" <<EOF
 {
@@ -158,7 +158,7 @@ cat > "/tmp/${NAME}.json" <<EOF
 }
 EOF
 
-technocore recipes add --from-file "/tmp/${NAME}.json"
+recall recipes add --from-file "/tmp/${NAME}.json"
 ```
 
 ## Backup Before Major Changes
@@ -169,26 +169,26 @@ Before a large refactor, snapshot your context:
 #!/bin/bash
 PROJECT=$(basename "$PWD")
 DATE=$(date +%Y%m%d)
-BACKUP_DIR="$HOME/.technocore/backups/$PROJECT-$DATE"
+BACKUP_DIR="$HOME/.recall/backups/$PROJECT-$DATE"
 mkdir -p "$BACKUP_DIR"
 
-cp ~/.technocore/global.db "$BACKUP_DIR/"
+cp ~/.recall/global.db "$BACKUP_DIR/"
 PROJECT_HASH=$(echo -n "$PWD" | sha256sum | cut -c1-16)
-cp ~/.technocore/projects/$PROJECT_HASH/project.db "$BACKUP_DIR/"
+cp ~/.recall/projects/$PROJECT_HASH/project.db "$BACKUP_DIR/"
 
 echo "Backup saved to $BACKUP_DIR"
 ```
 
 ## Query from Scripts
 
-Use `technocore query` in scripts to decide whether to use a local or cloud model:
+Use `recall query` in scripts to decide whether to use a local or cloud model:
 
 ```bash
 #!/bin/bash
 PROMPT="$1"
 
 # Try local model first
-OUTPUT=$(technocore query "$PROMPT" 2>&1)
+OUTPUT=$(recall query "$PROMPT" 2>&1)
 
 if echo "$OUTPUT" | grep -q "DELEGATE"; then
     # Local model couldn't handle it
@@ -208,7 +208,7 @@ fi
 
 | Variable | Effect |
 |---|---|
-| `HOME` | Base for `~/.technocore/` directory |
+| `HOME` | Base for `~/.recall/` directory |
 | `CLAUDE_CONFIG_DIR` | Override Claude Code config path for skill install |
 | `OPENCODE_CONFIG_DIR` | Override opencode config path |
 
@@ -219,7 +219,7 @@ Process multiple files through `tldr`:
 ```bash
 for f in docs/*.md; do
     echo "=== $(basename $f) ==="
-    cat "$f" | technocore tldr --sentences 2
+    cat "$f" | recall tldr --sentences 2
     echo
 done
 ```
@@ -230,13 +230,13 @@ Generate completion scripts for your shell:
 
 ```bash
 # Bash (add to .bashrc)
-source <(technocore completion bash)
+source <(recall completion bash)
 
 # Zsh (add to .zshrc)
-source <(technocore completion zsh)
+source <(recall completion zsh)
 
 # Fish
- technocore completion fish > ~/.config/fish/completions/technocore.fish
+ recall completion fish > ~/.config/fish/completions/recall.fish
 ```
 
 Note: Completion generation requires Cobra's built-in completion support, which is available if built with the standard cobra CLI.

@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gleicon/technocore/internal/summarizer"
+	"github.com/gleicon/recall/internal/summarizer"
 	"github.com/spf13/cobra"
 )
 

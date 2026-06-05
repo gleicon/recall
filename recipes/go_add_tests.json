@@ -6,6 +6,6 @@
   "context_needed": ["test helpers", "table-driven tests", "mock/stub"],
   "avoid": ["do not test unexported functions unless necessary"],
   "brief_template": "To add tests in a Go project:\n1. Create <name>_test.go in the same package or <name>_test in external package\n2. Use table-driven tests with anonymous structs\n3. Use t.Parallel() for independent tests\n4. Mock interfaces with hand-written stubs or mockgen\n5. Run 'go test ./... -race -cover'\n6. Add benchmark if the function is performance-critical",
-  "source": "technocore-defaults",
+  "source": "recall-defaults",
   "tags": ["testing", "go", "unit-tests"]
 }

@@ -5,9 +5,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/gleicon/technocore/internal/config"
-	"github.com/gleicon/technocore/internal/db"
-	"github.com/gleicon/technocore/internal/recipes"
+	"github.com/gleicon/recall/internal/config"
+	"github.com/gleicon/recall/internal/db"
+	"github.com/gleicon/recall/internal/recipes"
 	"github.com/spf13/cobra"
 )
 
@@ -18,7 +18,7 @@ var recipesCmd = &cobra.Command{
 
 var recipesSeedCmd = &cobra.Command{
 	Use:   "seed",
-	Short: "Load recipes from ~/.technocore/recipes/ into global.db",
+	Short: "Load recipes from ~/.recall/recipes/ into global.db",
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.NewConfig()
 		if err := cfg.EnsureDirs(); err != nil {

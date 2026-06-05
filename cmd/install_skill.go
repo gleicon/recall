@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
 
 var installSkillCmd = &cobra.Command{
 	Use:   "install-skill --target <assistant>",
-	Short: "Install technocore skill for an AI assistant",
+	Short: "Install recall skill for an AI assistant",
 	Run: func(cmd *cobra.Command, args []string) {
 		target, _ := cmd.Flags().GetString("target")
 		if target == "" {
@@ -27,20 +28,20 @@ var installSkillCmd = &cobra.Command{
 			if base == "" {
 				base = filepath.Join(os.Getenv("HOME"), ".claude")
 			}
-			destDir = filepath.Join(base, "skills", "technocore")
+			destDir = filepath.Join(base, "skills", "recall")
 			installClaudeHook(base, skillDir)
 		case "opencode":
 			skillDir = "skills/opencode"
 			base := filepath.Join(os.Getenv("HOME"), ".opencode")
-			destDir = filepath.Join(base, "skills", "technocore")
+			destDir = filepath.Join(base, "skills", "recall")
 		case "cursor":
 			skillDir = "skills/cursor"
 			base := filepath.Join(os.Getenv("HOME"), ".cursor")
-			destDir = filepath.Join(base, "skills", "technocore")
+			destDir = filepath.Join(base, "skills", "recall")
 		case "codex":
 			skillDir = "skills/codex"
 			base := filepath.Join(os.Getenv("HOME"), ".codex")
-			destDir = filepath.Join(base, "skills", "technocore")
+			destDir = filepath.Join(base, "skills", "recall")
 			installCodexHook(base, skillDir)
 		default:
 			fmt.Printf("Unsupported target: %s\n", target)
@@ -83,7 +84,7 @@ var installSkillCmd = &cobra.Command{
 			fmt.Printf("Installed %s\n", e.Name())
 		}
 
-		fmt.Printf("Technocore skill installed for %s at %s\n", target, destDir)
+		fmt.Printf("Recall skill installed for %s at %s\n", target, destDir)
 	},
 }
 
@@ -108,7 +109,7 @@ func installClaudeHook(baseDir, skillDir string) {
 		return
 	}
 
-	hookPath := filepath.Join(hooksDir, "technocore-hook.sh")
+	hookPath := filepath.Join(hooksDir, "recall-hook.sh")
 	if err := os.WriteFile(hookPath, data, 0755); err != nil {
 		fmt.Println("Warning: could not write hook:", err)
 		return
@@ -124,8 +125,11 @@ func installClaudeHook(baseDir, skillDir string) {
 	}
 
 	// Backup
-	backupPath := settingsPath + ".bak.technocore"
-	os.WriteFile(backupPath, settingsData, 0644)
+	backupPath := settingsPath + ".bak.recall"
+	if err := os.WriteFile(backupPath, settingsData, 0644); err != nil {
+		fmt.Println("Warning: could not write backup:", err)
+		return
+	}
 
 	var settings map[string]interface{}
 	if err := json.Unmarshal(settingsData, &settings); err != nil {
@@ -144,7 +148,7 @@ func installClaudeHook(baseDir, skillDir string) {
 		userPromptHooks = []interface{}{}
 	}
 
-	// Check if technocore hook already exists
+	// Check if recall hook already exists
 	for _, h := range userPromptHooks {
 		entry, ok := h.(map[string]interface{})
 		if !ok {
@@ -160,14 +164,14 @@ func installClaudeHook(baseDir, skillDir string) {
 				continue
 			}
 			cmd, _ := inner["command"].(string)
-			if contains(cmd, "technocore") {
-				fmt.Println("Technocore UserPromptSubmit hook already registered")
+			if contains(cmd, "recall") {
+				fmt.Println("Recall UserPromptSubmit hook already registered")
 				return
 			}
 		}
 	}
 
-	// Add technocore hook
+	// Add recall hook
 	newHook := map[string]interface{}{
 		"hooks": []interface{}{
 			map[string]interface{}{
@@ -214,7 +218,7 @@ func installCodexHook(baseDir, skillDir string) {
 		return
 	}
 
-	hookPath := filepath.Join(hooksDir, "technocore-hook.sh")
+	hookPath := filepath.Join(hooksDir, "recall-hook.sh")
 	if err := os.WriteFile(hookPath, data, 0755); err != nil {
 		fmt.Println("Warning: could not write hook:", err)
 		return
@@ -239,8 +243,15 @@ func installCodexHook(baseDir, skillDir string) {
 				},
 			},
 		}
-		updated, _ := json.MarshalIndent(hooksData, "", "  ")
-		os.WriteFile(hooksJSONPath, updated, 0644)
+		updated, err := json.MarshalIndent(hooksData, "", "  ")
+		if err != nil {
+			fmt.Println("Warning: could not marshal hooks.json:", err)
+			return
+		}
+		if err := os.WriteFile(hooksJSONPath, updated, 0644); err != nil {
+			fmt.Println("Warning: could not write hooks.json:", err)
+			return
+		}
 		fmt.Println("Created hooks.json with UserPromptSubmit hook")
 		return
 	}
@@ -256,7 +267,7 @@ func installCodexHook(baseDir, skillDir string) {
 		userPromptHooks = []interface{}{}
 	}
 
-	// Check if technocore hook already exists
+	// Check if recall hook already exists
 	for _, h := range userPromptHooks {
 		entry, ok := h.(map[string]interface{})
 		if !ok {
@@ -272,8 +283,8 @@ func installCodexHook(baseDir, skillDir string) {
 				continue
 			}
 			cmd, _ := inner["command"].(string)
-			if contains(cmd, "technocore") {
-				fmt.Println("Technocore UserPromptSubmit hook already registered")
+			if contains(cmd, "recall") {
+				fmt.Println("Recall UserPromptSubmit hook already registered")
 				return
 			}
 		}
@@ -304,7 +315,7 @@ func installCodexHook(baseDir, skillDir string) {
 }
 
 func contains(s, substr string) bool {
-	return len(s) > 0 && len(substr) > 0 && (s == substr || len(s) > len(substr) && (filepath.Base(s) == substr || filepath.Base(filepath.Dir(s)) == substr))
+	return strings.Contains(s, substr)
 }
 
 func init() {

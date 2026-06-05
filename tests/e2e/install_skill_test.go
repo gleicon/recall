@@ -16,7 +16,7 @@ func TestInstallSkillClaudeCreatesSkillFile(t *testing.T) {
 	}
 
 	// Verify skill file exists
-	skillPath := filepath.Join(e.HomeDir, ".claude", "skills", "technocore", "SKILL.md")
+	skillPath := filepath.Join(e.HomeDir, ".claude", "skills", "recall", "SKILL.md")
 	if _, err := os.Stat(skillPath); os.IsNotExist(err) {
 		t.Fatalf("expected skill file at %s, not found", skillPath)
 	}
@@ -26,10 +26,10 @@ func TestInstallSkillClaudeCreatesSkillFile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !strings.Contains(string(content), "technocore brief") {
-		t.Fatalf("expected skill to reference 'technocore brief', got: %s", string(content))
+	if !strings.Contains(string(content), "recall brief") {
+		t.Fatalf("expected skill to reference 'recall brief', got: %s", string(content))
 	}
-	if !strings.Contains(string(content), "technocore run suggest") {
-		t.Fatalf("expected skill to reference 'technocore run suggest', got: %s", string(content))
+	if !strings.Contains(string(content), "recall run suggest") {
+		t.Fatalf("expected skill to reference 'recall run suggest', got: %s", string(content))
 	}
 }

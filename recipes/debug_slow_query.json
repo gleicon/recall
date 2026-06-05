@@ -6,6 +6,6 @@
   "context_needed": ["query logs", "schema indexes", "connection pool settings"],
   "avoid": ["do not add indexes blindly without EXPLAIN"],
   "brief_template": "To debug a slow query:\n1. Enable query logging (Prisma: query log, SQLx: query! debug, Go: driver logging)\n2. Run EXPLAIN ANALYZE on the slow query\n3. Check for missing indexes on JOIN columns and WHERE filters\n4. Review N+1 queries; add eager loading or batching\n5. Check connection pool size and timeout settings\n6. Consider query result pagination",
-  "source": "technocore-defaults",
+  "source": "recall-defaults",
   "tags": ["performance", "database", "debugging"]
 }

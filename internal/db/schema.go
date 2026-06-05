@@ -94,6 +94,9 @@ func InitGlobalSchema(db *sql.DB) error {
 			delegation_reason TEXT,
 			project_hash TEXT,
 			framework TEXT,
+			embedding BLOB,
+			accepted INTEGER DEFAULT NULL,
+			feedback_note TEXT,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
 		`CREATE TABLE IF NOT EXISTS snippets (
@@ -132,6 +135,9 @@ func InitGlobalSchema(db *sql.DB) error {
 		`ALTER TABLE task_recipes ADD COLUMN source TEXT`,
 		`ALTER TABLE task_recipes ADD COLUMN tags TEXT`,
 		`ALTER TABLE conversations ADD COLUMN delegation_reason TEXT`,
+		`ALTER TABLE conversations ADD COLUMN embedding BLOB`,
+		`ALTER TABLE conversations ADD COLUMN accepted INTEGER DEFAULT NULL`,
+		`ALTER TABLE conversations ADD COLUMN feedback_note TEXT`,
 	}
 	for _, s := range alterStmts {
 		_, _ = db.Exec(s) // ignore "duplicate column name" errors
@@ -148,6 +154,7 @@ func InitProjectSchema(db *sql.DB) error {
 			hash TEXT,
 			content TEXT,
 			summary TEXT,
+			embedding BLOB,
 			created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
@@ -210,6 +217,7 @@ func InitProjectSchema(db *sql.DB) error {
 			module_boundaries TEXT,
 			important_dirs TEXT,
 			ignored_areas TEXT,
+			embed_model TEXT,
 			updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 		)`,
 	}
@@ -217,6 +225,14 @@ func InitProjectSchema(db *sql.DB) error {
 		if _, err := db.Exec(s); err != nil {
 			return fmt.Errorf("project schema: %w", err)
 		}
+	}
+	// Backward-compat for project schema
+	projectAlterStmts := []string{
+		`ALTER TABLE files ADD COLUMN embedding BLOB`,
+		`ALTER TABLE project_map ADD COLUMN embed_model TEXT`,
+	}
+	for _, s := range projectAlterStmts {
+		_, _ = db.Exec(s)
 	}
 	return nil
 }

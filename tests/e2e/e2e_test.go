@@ -13,8 +13,8 @@ import (
 var binaryPath string
 
 func TestMain(m *testing.M) {
-	// Build the technocore binary once for all E2E tests
-	tmpBin := filepath.Join(os.TempDir(), "technocore_e2e")
+	// Build the recall binary once for all E2E tests
+	tmpBin := filepath.Join(os.TempDir(), "recall_e2e")
 	build := exec.Command("go", "build", "-o", tmpBin, ".")
 	build.Dir = repoRoot()
 	if out, err := build.CombinedOutput(); err != nil {
@@ -47,7 +47,7 @@ func newEnv(t *testing.T) *e2eEnv {
 	return &e2eEnv{HomeDir: home, t: t}
 }
 
-// run executes the technocore binary with args, returning stdout, stderr, and exit code.
+// run executes the recall binary with args, returning stdout, stderr, and exit code.
 func (e *e2eEnv) run(args ...string) (stdout, stderr string, exitCode int) {
 	return e.runInDir(repoRoot(), args...)
 }
@@ -100,5 +100,5 @@ func (e *e2eEnv) runWithInputInDir(dir, stdin string, args ...string) (stdout, s
 
 // globalDBPath returns the path to the global DB in this env.
 func (e *e2eEnv) globalDBPath() string {
-	return filepath.Join(e.HomeDir, ".technocore", "global.db")
+	return filepath.Join(e.HomeDir, ".recall", "global.db")
 }

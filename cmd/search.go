@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/gleicon/technocore/internal/cache"
-	"github.com/gleicon/technocore/internal/config"
-	"github.com/gleicon/technocore/internal/search"
+	"github.com/gleicon/recall/internal/cache"
+	"github.com/gleicon/recall/internal/config"
+	"github.com/gleicon/recall/internal/search"
 	"github.com/spf13/cobra"
 )
 
@@ -27,7 +27,12 @@ var searchCmd = &cobra.Command{
 		limit, _ := cmd.Flags().GetInt("limit")
 		chunks, _ := cmd.Flags().GetBool("chunks")
 
-		engine := search.NewEngine(m.ProjectDB)
+		settings, _ := cfg.LoadSettings()
+		embedModel := ""
+		if settings != nil {
+			embedModel = settings.EmbedModel
+		}
+		engine := search.NewEngine(m.ProjectDB, embedModel)
 		var results []search.Result
 		if chunks {
 			results, err = engine.ChunkQuery(q, limit)

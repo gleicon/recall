@@ -6,6 +6,6 @@
   "context_needed": ["container image", "replicas", "env vars", "resource limits"],
   "avoid": ["do not hardcode secrets in YAML"],
   "brief_template": "To add a Kubernetes deployment:\n1. Create deployment.yaml with image, replicas, and labels\n2. Add service.yaml (ClusterIP or LoadBalancer) for networking\n3. Add configmap.yaml or secret.yaml for env/config\n4. Set resource requests/limits (cpu, memory)\n5. Add livenessProbe and readinessProbe\n6. Apply with 'kubectl apply -f k8s/'",
-  "source": "technocore-defaults",
+  "source": "recall-defaults",
   "tags": ["kubernetes", "k8s", "devops", "containers"]
 }

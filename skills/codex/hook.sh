@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# technocore-hook.sh — UserPromptSubmit hook for Claude Code
+# recall-hook.sh — UserPromptSubmit hook for Claude Code
 # Auto-injects project brief and matching recipes into assistant context.
-# Exits 0 silently if technocore is not in PATH.
+# Exits 0 silently if recall is not in PATH.
 
 set -euo pipefail
 
-# Require technocore in PATH
-if ! command -v technocore >/dev/null 2>&1; then
+# Require recall in PATH
+if ! command -v recall >/dev/null 2>&1; then
   exit 0
 fi
 
@@ -26,8 +26,8 @@ if [ -z "$PROMPT" ]; then
   exit 0
 fi
 
-# Run technocore brief in the current working directory
-BRIEF=$(technocore brief "$PROMPT" 2>/dev/null || true)
+# Run recall brief in the current working directory
+BRIEF=$(recall brief "$PROMPT" 2>/dev/null || true)
 
 if [ -z "$BRIEF" ]; then
   exit 0
@@ -41,7 +41,7 @@ content = sys.stdin.read()
 output = {
   'hookSpecificOutput': {
     'hookEventName': 'UserPromptSubmit',
-    'additionalContext': '[Technocore Brief]\\n' + content
+    'additionalContext': '[Recall Brief]\\n' + content
   }
 }
 print(json.dumps(output))

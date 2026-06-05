@@ -12,7 +12,7 @@ func TestInstallSkillOpencodeCreatesSkillFile(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("install-skill opencode exited %d", code)
 	}
-	skillPath := filepath.Join(e.HomeDir, ".opencode", "skills", "technocore", "SKILL.md")
+	skillPath := filepath.Join(e.HomeDir, ".opencode", "skills", "recall", "SKILL.md")
 	if _, err := os.Stat(skillPath); os.IsNotExist(err) {
 		t.Fatalf("expected skill file at %s", skillPath)
 	}
@@ -24,7 +24,7 @@ func TestInstallSkillCursorCreatesSkillFile(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("install-skill cursor exited %d", code)
 	}
-	skillPath := filepath.Join(e.HomeDir, ".cursor", "skills", "technocore", "SKILL.md")
+	skillPath := filepath.Join(e.HomeDir, ".cursor", "skills", "recall", "SKILL.md")
 	if _, err := os.Stat(skillPath); os.IsNotExist(err) {
 		t.Fatalf("expected skill file at %s", skillPath)
 	}
@@ -36,7 +36,7 @@ func TestInstallSkillCodexCreatesSkillFile(t *testing.T) {
 	if code != 0 {
 		t.Fatalf("install-skill codex exited %d", code)
 	}
-	skillPath := filepath.Join(e.HomeDir, ".codex", "skills", "technocore", "SKILL.md")
+	skillPath := filepath.Join(e.HomeDir, ".codex", "skills", "recall", "SKILL.md")
 	if _, err := os.Stat(skillPath); os.IsNotExist(err) {
 		t.Fatalf("expected skill file at %s", skillPath)
 	}

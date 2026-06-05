@@ -6,6 +6,6 @@
   "context_needed": ["error types", "middleware", "logging", "response format"],
   "avoid": ["do not leak stack traces in production"],
   "brief_template": "To add consistent error handling:\n1. Define custom error classes/types (ValidationError, NotFoundError, AuthError)\n2. Create error middleware/handler at app level\n3. Map errors to HTTP status codes (400, 401, 403, 404, 409, 500)\n4. Return consistent error JSON: { error: { code, message, details } }\n5. Log full error stack + context (user ID, request ID)\n6. In production: hide stack traces from client responses\n7. Add alerting for 500-level errors (Sentry, Rollbar, etc.)",
-  "source": "technocore-defaults",
+  "source": "recall-defaults",
   "tags": ["error-handling", "api", "middleware", "observability"]
 }

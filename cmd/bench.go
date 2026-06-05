@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/gleicon/technocore/internal/cache"
-	"github.com/gleicon/technocore/internal/config"
-	"github.com/gleicon/technocore/internal/db"
-	"github.com/gleicon/technocore/internal/embeddings"
-	"github.com/gleicon/technocore/internal/recipes"
-	"github.com/gleicon/technocore/internal/search"
+	"github.com/gleicon/recall/internal/cache"
+	"github.com/gleicon/recall/internal/config"
+	"github.com/gleicon/recall/internal/db"
+	"github.com/gleicon/recall/internal/embeddings"
+	"github.com/gleicon/recall/internal/recipes"
+	"github.com/gleicon/recall/internal/search"
 	"github.com/spf13/cobra"
 )
 
@@ -17,8 +17,8 @@ var benchCmd = &cobra.Command{
 	Use:   "bench",
 	Short: "Run performance benchmarks",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("=== Technocore Benchmarks ===")
-	fmt.Println()
+		fmt.Println("=== Recall Benchmarks ===")
+		fmt.Println()
 
 		// Benchmark 1: Recipe vector search
 		fmt.Println("--- Recipe Vector Search ---")
@@ -94,7 +94,12 @@ func benchFileSearch() {
 		return
 	}
 
-	engine := search.NewEngine(pdb)
+	settings, _ := cfg.LoadSettings()
+	embedModel := ""
+	if settings != nil {
+		embedModel = settings.EmbedModel
+	}
+	engine := search.NewEngine(pdb, embedModel)
 	start := time.Now()
 	_, err = engine.Query("cache build", 10)
 	if err != nil {
@@ -116,7 +121,7 @@ func benchBrief() {
 
 	pm, err := m.GetMap()
 	if err != nil || pm == nil {
-		fmt.Println("  (skip: no project map; run 'technocore map' first)")
+		fmt.Println("  (skip: no project map; run 'recall map' first)")
 		return
 	}
 

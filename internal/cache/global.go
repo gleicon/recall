@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gleicon/technocore/internal/config"
-	"github.com/gleicon/technocore/internal/db"
+	"github.com/gleicon/recall/internal/config"
+	"github.com/gleicon/recall/internal/db"
 )
 
 // GlobalStats holds aggregated statistics across all projects.

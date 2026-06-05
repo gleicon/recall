@@ -6,8 +6,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/gleicon/technocore/internal/cache"
-	"github.com/gleicon/technocore/internal/config"
+	"github.com/gleicon/recall/internal/cache"
+	"github.com/gleicon/recall/internal/config"
 	"github.com/spf13/cobra"
 )
 

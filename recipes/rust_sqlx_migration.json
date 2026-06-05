@@ -6,6 +6,6 @@
   "context_needed": ["sqlx-cli installed", "database URL", "migration directory"],
   "avoid": ["do not edit existing migration files after they are run"],
   "brief_template": "To add a SQLx migration:\n1. Run 'sqlx migrate add <name>' to generate migration files\n2. Write .up.sql and .down.sql in migrations/<timestamp>_<name>/\n3. Run 'sqlx migrate run' to apply\n4. Regenerate query metadata: 'cargo sqlx prepare' if using offline mode\n5. Add test that applies migrations to a test database",
-  "source": "technocore-defaults",
+  "source": "recall-defaults",
   "tags": ["sqlx", "rust", "database", "migration"]
 }

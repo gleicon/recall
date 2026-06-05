@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 )
 
-// Config holds technocore paths.
+// Config holds recall paths.
 type Config struct {
 	HomeDir        string
 	GlobalDBPath   string
@@ -19,13 +19,17 @@ type Config struct {
 
 type Settings struct {
 	LocalModel   string `json:"local_model"`
+	EmbedModel   string `json:"embed_model"`
 	QueryTimeout int    `json:"query_timeout"`
 }
 
 // NewConfig creates config from environment.
 func NewConfig() *Config {
-	home, _ := os.UserHomeDir()
-	base := filepath.Join(home, ".technocore")
+	home, err := os.UserHomeDir()
+	if err != nil {
+		home = "."
+	}
+	base := filepath.Join(home, ".recall")
 	return &Config{
 		HomeDir:        base,
 		GlobalDBPath:   filepath.Join(base, "global.db"),

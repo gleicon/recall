@@ -21,7 +21,7 @@ THE SOFTWARE.
 */
 package main
 
-import "github.com/gleicon/technocore/cmd"
+import "github.com/gleicon/recall/cmd"
 
 func main() {
 

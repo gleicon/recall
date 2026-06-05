@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/gleicon/technocore/internal/config"
-	"github.com/gleicon/technocore/internal/llm"
+	"github.com/gleicon/recall/internal/config"
+	"github.com/gleicon/recall/internal/llm"
 	"github.com/spf13/cobra"
 )
 

@@ -6,6 +6,6 @@
   "context_needed": ["test framework", "fixtures", "mocks"],
   "avoid": ["do not test external APIs directly"],
   "brief_template": "To add tests in a Python project:\n1. Check test framework: pytest, unittest, or tox\n2. Create tests/ or mirror src/ layout\n3. Use fixtures in conftest.py for shared setup\n4. Mock external HTTP calls with responses or httpx_mock\n5. Use parametrize for multiple input cases\n6. Run with coverage: 'pytest --cov=src tests/'",
-  "source": "technocore-defaults",
+  "source": "recall-defaults",
   "tags": ["testing", "python", "pytest"]
 }

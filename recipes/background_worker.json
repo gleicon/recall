@@ -6,6 +6,6 @@
   "context_needed": ["queue system", "worker process", "retry config", "dead letter queue"],
   "avoid": ["do not lose failed jobs without logging"],
   "brief_template": "To add a background worker:\n1. Choose queue: Redis (Bull, Sidekiq, Celery), SQS, or RabbitMQ\n2. Define job class/handler with input schema\n3. Add retry policy: 3 retries with exponential backoff\n4. Add dead-letter queue for permanently failed jobs\n5. Implement graceful shutdown (finish current job before exit)\n6. Add observability: processed count, failure rate, queue depth\n7. Scale workers horizontally if queue depth exceeds threshold",
-  "source": "technocore-defaults",
+  "source": "recall-defaults",
   "tags": ["workers", "queues", "background", "async"]
 }
