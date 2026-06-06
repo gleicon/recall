@@ -67,7 +67,18 @@ func (c *Client) pickSmallestModel() string {
 }
 
 // Detect probes common local LLM endpoints and returns the first working one.
+// PreferredEndpoint overrides auto-detection when set. Use SetEndpoint or --endpoint flag.
+var PreferredEndpoint string
+
+// DetectTimeout controls how long to wait when probing local LLM endpoints.
+var DetectTimeout = 2 * time.Second
+
 func Detect() *Client {
+	if PreferredEndpoint != "" {
+		if c := detectOpenAI(PreferredEndpoint, "custom"); c != nil {
+			return c
+		}
+	}
 	if c := detectOpenAI("http://localhost:8080", "llama-app"); c != nil {
 		return c
 	}
@@ -80,7 +91,7 @@ func Detect() *Client {
 }
 
 func detectOpenAI(endpoint, clientType string) *Client {
-	client := &http.Client{Timeout: 2 * time.Second}
+	client := &http.Client{Timeout: DetectTimeout}
 
 	resp, err := client.Get(endpoint + "/v1/models")
 	if err != nil {
@@ -130,6 +141,80 @@ func detectOpenAI(endpoint, clientType string) *Client {
 		Selected:     models[0],
 		QueryTimeout: 30 * time.Second,
 	}
+}
+
+// ProbeResult holds the outcome of probing a single endpoint.
+type ProbeResult struct {
+	Endpoint string
+	Reachable bool
+	Models    []string
+	Error     string
+}
+
+// ProbeAll checks every candidate endpoint and returns results for all of them.
+func ProbeAll() []ProbeResult {
+	candidates := []string{}
+	if PreferredEndpoint != "" {
+		candidates = append(candidates, PreferredEndpoint)
+	}
+	candidates = append(candidates, "http://localhost:8080")
+	for _, port := range []string{"8000", "5000", "11434"} {
+		candidates = append(candidates, "http://localhost:"+port)
+	}
+
+	var results []ProbeResult
+	seen := map[string]bool{}
+	for _, ep := range candidates {
+		if seen[ep] {
+			continue
+		}
+		seen[ep] = true
+		results = append(results, probeEndpoint(ep))
+	}
+	return results
+}
+
+func probeEndpoint(endpoint string) ProbeResult {
+	r := ProbeResult{Endpoint: endpoint}
+	client := &http.Client{Timeout: DetectTimeout}
+	resp, err := client.Get(endpoint + "/v1/models")
+	if err != nil {
+		r.Error = err.Error()
+		return r
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		r.Error = fmt.Sprintf("HTTP %d", resp.StatusCode)
+		return r
+	}
+	r.Reachable = true
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return r
+	}
+	var result struct {
+		Data []struct {
+			ID string `json:"id"`
+		} `json:"data"`
+		Models []struct {
+			ID string `json:"id"`
+		} `json:"models"`
+	}
+	if err := json.Unmarshal(body, &result); err != nil {
+		return r
+	}
+	for _, m := range result.Data {
+		if m.ID != "" {
+			r.Models = append(r.Models, m.ID)
+		}
+	}
+	for _, m := range result.Models {
+		if m.ID != "" {
+			r.Models = append(r.Models, m.ID)
+		}
+	}
+	return r
 }
 
 func (c *Client) SetTimeout(d time.Duration) {
@@ -284,7 +369,11 @@ func (c *Client) GetEmbedding(text string) ([]float32, error) {
 		return nil, err
 	}
 
-	client := &http.Client{Timeout: 10 * time.Second}
+	embedTimeout := c.QueryTimeout
+	if embedTimeout <= 0 {
+		embedTimeout = 10 * time.Second
+	}
+	client := &http.Client{Timeout: embedTimeout}
 	resp, err := client.Post(c.Endpoint+"/v1/embeddings", "application/json", bytes.NewReader(body))
 	if err != nil {
 		return nil, err

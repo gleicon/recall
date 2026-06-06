@@ -18,30 +18,36 @@ var localStatusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Show local LLM status",
 	Run: func(cmd *cobra.Command, args []string) {
-		client := llm.Detect()
-		if client == nil {
-			fmt.Println("No local LLM detected.")
-			return
-		}
-
 		cfg := config.NewConfig()
 		settings, err := cfg.LoadSettings()
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "Error loading settings:", err)
 			return
 		}
-		preferred := client.PreferredModel(settings.LocalModel)
 
-		fmt.Printf("%s (%s)\n", client.Type, client.Endpoint)
-		for _, m := range client.Models {
-			marker := ""
-			if m == preferred {
-				marker = " *"
+		results := llm.ProbeAll()
+		anyUp := false
+		for _, r := range results {
+			if r.Reachable {
+				anyUp = true
+				fmt.Printf("✓ %s  models: %v\n", r.Endpoint, r.Models)
+			} else {
+				fmt.Printf("✗ %s  (%s)\n", r.Endpoint, r.Error)
 			}
-			fmt.Printf("  %s%s\n", m, marker)
 		}
-		if settings.LocalModel != "" {
-			fmt.Printf("Preference: %s\n", settings.LocalModel)
+
+		if !anyUp {
+			fmt.Println("No local LLM detected.")
+			return
+		}
+
+		client := llm.Detect()
+		if client != nil && settings.LocalModel != "" {
+			preferred := client.PreferredModel(settings.LocalModel)
+			fmt.Printf("Active: %s  preferred model: %s\n", client.Endpoint, preferred)
+		}
+		if settings.EmbedModel != "" {
+			fmt.Printf("Embed model: %s\n", settings.EmbedModel)
 		}
 	},
 }

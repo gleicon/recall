@@ -18,9 +18,11 @@ type Config struct {
 }
 
 type Settings struct {
-	LocalModel   string `json:"local_model"`
-	EmbedModel   string `json:"embed_model"`
-	QueryTimeout int    `json:"query_timeout"`
+	LocalModel     string `json:"local_model"`
+	EmbedModel     string `json:"embed_model"`
+	LocalEndpoint  string `json:"local_endpoint"`
+	QueryTimeout   int    `json:"query_timeout"`
+	DetectTimeout  int    `json:"detect_timeout"`
 }
 
 // NewConfig creates config from environment.

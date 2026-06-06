@@ -5,7 +5,10 @@ import (
 	"os"
 	"path/filepath"
 	"runtime/debug"
+	"time"
 
+	"github.com/gleicon/recall/internal/config"
+	"github.com/gleicon/recall/internal/llm"
 	"github.com/spf13/cobra"
 )
 
@@ -15,6 +18,7 @@ var Version = "dev"
 
 var cfgFile string
 var dataDir string
+var endpointFlag string
 
 var rootCmd = &cobra.Command{
 	Use:   "recall",
@@ -25,6 +29,20 @@ and generates task briefs to save tokens and avoid unnecessary model roundtrips.
 
 Local cache = "what is true in this repo?"
 Global cache = "what patterns keep being true across repos?"`,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		cfg := config.NewConfig()
+		if settings, err := cfg.LoadSettings(); err == nil {
+			if settings.LocalEndpoint != "" {
+				llm.PreferredEndpoint = settings.LocalEndpoint
+			}
+			if settings.DetectTimeout > 0 {
+				llm.DetectTimeout = time.Duration(settings.DetectTimeout) * time.Second
+			}
+		}
+		if endpointFlag != "" {
+			llm.PreferredEndpoint = endpointFlag
+		}
+	},
 }
 
 func Execute() {
@@ -52,4 +70,5 @@ func init() {
 	rootCmd.Version = Version
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", filepath.Join(defaultDir, ".recall.yaml"), "config file")
 	rootCmd.PersistentFlags().StringVar(&dataDir, "datadir", defaultDir, "data directory")
+	rootCmd.PersistentFlags().StringVar(&endpointFlag, "endpoint", "", "local LLM endpoint (e.g. http://localhost:1234)")
 }
