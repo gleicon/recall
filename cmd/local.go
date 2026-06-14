@@ -26,25 +26,26 @@ var localStatusCmd = &cobra.Command{
 		}
 
 		results := llm.ProbeAll()
-		anyUp := false
+		var active *llm.Client
 		for _, r := range results {
 			if r.Reachable {
-				anyUp = true
 				fmt.Printf("✓ %s  models: %v\n", r.Endpoint, r.Models)
+				if active == nil && len(r.Models) > 0 {
+					active = &llm.Client{Endpoint: r.Endpoint, Models: r.Models, Selected: r.Models[0]}
+				}
 			} else {
 				fmt.Printf("✗ %s  (%s)\n", r.Endpoint, r.Error)
 			}
 		}
 
-		if !anyUp {
+		if active == nil {
 			fmt.Println("No local LLM detected.")
 			return
 		}
 
-		client := llm.Detect()
-		if client != nil && settings.LocalModel != "" {
-			preferred := client.PreferredModel(settings.LocalModel)
-			fmt.Printf("Active: %s  preferred model: %s\n", client.Endpoint, preferred)
+		if settings.LocalModel != "" {
+			preferred := active.PreferredModel(settings.LocalModel)
+			fmt.Printf("Active: %s  preferred model: %s\n", active.Endpoint, preferred)
 		}
 		if settings.EmbedModel != "" {
 			fmt.Printf("Embed model: %s\n", settings.EmbedModel)

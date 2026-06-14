@@ -27,34 +27,23 @@ var statusCmd = &cobra.Command{
 
 		cfg := config.NewConfig()
 		pdb, err := db.Open(cfg.ProjectDBPath("."))
-		if err != nil {
-			printStatus(out)
-			return
-		}
-		defer pdb.Close()
-		if err := db.InitProjectSchema(pdb); err != nil {
-			printStatus(out)
-			return
-		}
-
-		var lang, fw, mappedAt sql.NullString
-		row := pdb.QueryRow(`SELECT language, framework, updated_at FROM project_map WHERE id=1`)
-		if err := row.Scan(&lang, &fw, &mappedAt); err == nil {
-			out.Mapped = true
-			out.MappedAt = mappedAt.String
-			out.Language = lang.String
-			out.Framework = fw.String
+		if err == nil {
+			defer pdb.Close()
+			if db.InitProjectSchema(pdb) == nil {
+				var lang, fw, mappedAt sql.NullString
+				if pdb.QueryRow(`SELECT language, framework, updated_at FROM project_map WHERE id=1`).Scan(&lang, &fw, &mappedAt) == nil {
+					out.Mapped = true
+					out.MappedAt = mappedAt.String
+					out.Language = lang.String
+					out.Framework = fw.String
+				}
+				pdb.QueryRow(`SELECT COUNT(*) FROM files`).Scan(&out.FilesIndexed)
+			}
 		}
 
-		pdb.QueryRow(`SELECT COUNT(*) FROM files`).Scan(&out.FilesIndexed)
-
-		printStatus(out)
+		b, _ := json.Marshal(out)
+		fmt.Println(string(b))
 	},
-}
-
-func printStatus(out statusOutput) {
-	b, _ := json.Marshal(out)
-	fmt.Println(string(b))
 }
 
 func init() {

@@ -13,7 +13,6 @@ import (
 )
 
 // Version is set at build time via ldflags: -X github.com/gleicon/recall/cmd.Version=v1.2.3
-// Falls back to the module version embedded by go install.
 var Version = "dev"
 
 var cfgFile string

@@ -66,12 +66,17 @@ func (c *Client) pickSmallestModel() string {
 	return c.Models[0]
 }
 
-// Detect probes common local LLM endpoints and returns the first working one.
-// PreferredEndpoint overrides auto-detection when set. Use SetEndpoint or --endpoint flag.
+// PreferredEndpoint overrides auto-detection when set via --endpoint or config.
 var PreferredEndpoint string
 
-// DetectTimeout controls how long to wait when probing local LLM endpoints.
 var DetectTimeout = 2 * time.Second
+
+var defaultEndpoints = []string{
+	"http://localhost:8080",
+	"http://localhost:8000",
+	"http://localhost:5000",
+	"http://localhost:11434",
+}
 
 func Detect() *Client {
 	if PreferredEndpoint != "" {
@@ -79,15 +84,34 @@ func Detect() *Client {
 			return c
 		}
 	}
-	if c := detectOpenAI("http://localhost:8080", "llama-app"); c != nil {
-		return c
-	}
-	for _, port := range []string{"8000", "5000", "11434"} {
-		if c := detectOpenAI("http://localhost:"+port, "generic-openai"); c != nil {
+	for _, ep := range defaultEndpoints {
+		if c := detectOpenAI(ep, "generic-openai"); c != nil {
 			return c
 		}
 	}
 	return nil
+}
+
+func parseModelList(body []byte) []string {
+	var result struct {
+		Data   []struct{ ID string `json:"id"` } `json:"data"`
+		Models []struct{ ID string `json:"id"` } `json:"models"`
+	}
+	if err := json.Unmarshal(body, &result); err != nil {
+		return nil
+	}
+	var models []string
+	for _, m := range result.Data {
+		if m.ID != "" {
+			models = append(models, m.ID)
+		}
+	}
+	for _, m := range result.Models {
+		if m.ID != "" {
+			models = append(models, m.ID)
+		}
+	}
+	return models
 }
 
 func detectOpenAI(endpoint, clientType string) *Client {
@@ -107,29 +131,7 @@ func detectOpenAI(endpoint, clientType string) *Client {
 		return nil
 	}
 
-	var result struct {
-		Data []struct {
-			ID string `json:"id"`
-		} `json:"data"`
-		Models []struct {
-			ID string `json:"id"`
-		} `json:"models"`
-	}
-	if err := json.Unmarshal(body, &result); err != nil {
-		return nil
-	}
-
-	var models []string
-	for _, m := range result.Data {
-		if m.ID != "" {
-			models = append(models, m.ID)
-		}
-	}
-	for _, m := range result.Models {
-		if m.ID != "" {
-			models = append(models, m.ID)
-		}
-	}
+	models := parseModelList(body)
 	if len(models) == 0 {
 		models = append(models, "default")
 	}
@@ -143,24 +145,19 @@ func detectOpenAI(endpoint, clientType string) *Client {
 	}
 }
 
-// ProbeResult holds the outcome of probing a single endpoint.
 type ProbeResult struct {
-	Endpoint string
+	Endpoint  string
 	Reachable bool
 	Models    []string
 	Error     string
 }
 
-// ProbeAll checks every candidate endpoint and returns results for all of them.
 func ProbeAll() []ProbeResult {
-	candidates := []string{}
+	var candidates []string
 	if PreferredEndpoint != "" {
 		candidates = append(candidates, PreferredEndpoint)
 	}
-	candidates = append(candidates, "http://localhost:8080")
-	for _, port := range []string{"8000", "5000", "11434"} {
-		candidates = append(candidates, "http://localhost:"+port)
-	}
+	candidates = append(candidates, defaultEndpoints...)
 
 	var results []ProbeResult
 	seen := map[string]bool{}
@@ -193,27 +190,7 @@ func probeEndpoint(endpoint string) ProbeResult {
 	if err != nil {
 		return r
 	}
-	var result struct {
-		Data []struct {
-			ID string `json:"id"`
-		} `json:"data"`
-		Models []struct {
-			ID string `json:"id"`
-		} `json:"models"`
-	}
-	if err := json.Unmarshal(body, &result); err != nil {
-		return r
-	}
-	for _, m := range result.Data {
-		if m.ID != "" {
-			r.Models = append(r.Models, m.ID)
-		}
-	}
-	for _, m := range result.Models {
-		if m.ID != "" {
-			r.Models = append(r.Models, m.ID)
-		}
-	}
+	r.Models = parseModelList(body)
 	return r
 }
 
